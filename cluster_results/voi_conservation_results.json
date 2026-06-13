@@ -1,0 +1,127 @@
+[
+  {
+    "taxon": "Amphibia",
+    "n_cells_rarefied": 106,
+    "perm_p_floor": 0.0005,
+    "K": 5,
+    "n_species": 25,
+    "weighted_discovery": {
+      "spearman": 0.13530382705663338,
+      "perm_p": 0.161,
+      "null_sd": 0.09780504280863615
+    },
+    "unweighted_discovery": {
+      "spearman": 0.49322690951262826,
+      "perm_p": 0.0
+    },
+    "discovery_rarity_vs_priority": {
+      "spearman": -0.3342312308505915,
+      "perm_p": 0.0,
+      "null_sd": 0.09934347042870577
+    },
+    "mean_rarity_top": 0.10427423375186401,
+    "mean_rarity_bottom": 0.17328840792403102,
+    "rarity_ratio_top_vs_bottom": 0.6017380793155964,
+    "weight_tag": "rarity"
+  },
+  {
+    "taxon": "Aves",
+    "n_cells_rarefied": 152,
+    "perm_p_floor": 0.0005,
+    "K": 5,
+    "n_species": 380,
+    "weighted_discovery": {
+      "spearman": 0.19762617667298246,
+      "perm_p": 0.0185,
+      "null_sd": 0.08424468329074994
+    },
+    "unweighted_discovery": {
+      "spearman": 0.5629495891580434,
+      "perm_p": 0.0
+    },
+    "discovery_rarity_vs_priority": {
+      "spearman": -0.18108869299026398,
+      "perm_p": 0.0235,
+      "null_sd": 0.08228637187390377
+    },
+    "mean_rarity_top": 0.20698209464615894,
+    "mean_rarity_bottom": 0.23964016015329345,
+    "rarity_ratio_top_vs_bottom": 0.8637203985916061,
+    "weight_tag": "rarity"
+  },
+  {
+    "taxon": "Insecta",
+    "n_cells_rarefied": 116,
+    "perm_p_floor": 0.0005,
+    "K": 5,
+    "n_species": 1562,
+    "weighted_discovery": {
+      "spearman": -0.02634503106131993,
+      "perm_p": 0.7875,
+      "null_sd": 0.0927612981928687
+    },
+    "unweighted_discovery": {
+      "spearman": 0.5120446562983344,
+      "perm_p": 0.0
+    },
+    "discovery_rarity_vs_priority": {
+      "spearman": -0.2886611058071682,
+      "perm_p": 0.003,
+      "null_sd": 0.0934136601472774
+    },
+    "mean_rarity_top": 0.28947617833154715,
+    "mean_rarity_bottom": 0.35458842147199204,
+    "rarity_ratio_top_vs_bottom": 0.8163723370601148,
+    "weight_tag": "rarity"
+  },
+  {
+    "taxon": "Mammalia",
+    "n_cells_rarefied": 169,
+    "perm_p_floor": 0.0005,
+    "K": 5,
+    "n_species": 148,
+    "weighted_discovery": {
+      "spearman": 0.2739935667305032,
+      "perm_p": 0.0005,
+      "null_sd": 0.07660295179400373
+    },
+    "unweighted_discovery": {
+      "spearman": 0.6410636828507152,
+      "perm_p": 0.0
+    },
+    "discovery_rarity_vs_priority": {
+      "spearman": -0.3047640429054088,
+      "perm_p": 0.0,
+      "null_sd": 0.07783965568196104
+    },
+    "mean_rarity_top": 0.10960950069001364,
+    "mean_rarity_bottom": 0.25532988339842105,
+    "rarity_ratio_top_vs_bottom": 0.42928582910515467,
+    "weight_tag": "rarity"
+  },
+  {
+    "taxon": "Reptilia",
+    "n_cells_rarefied": 75,
+    "perm_p_floor": 0.0005,
+    "K": 5,
+    "n_species": 33,
+    "weighted_discovery": {
+      "spearman": 0.1322848424899324,
+      "perm_p": 0.2605,
+      "null_sd": 0.11852537477165438
+    },
+    "unweighted_discovery": {
+      "spearman": 0.6137448831939631,
+      "perm_p": 0.0
+    },
+    "discovery_rarity_vs_priority": {
+      "spearman": -0.49106323272123065,
+      "perm_p": 0.0,
+      "null_sd": 0.11998356165881569
+    },
+    "mean_rarity_top": 0.0729782386537029,
+    "mean_rarity_bottom": 0.24634519997800214,
+    "rarity_ratio_top_vs_bottom": 0.296243802031538,
+    "weight_tag": "rarity"
+  }
+]

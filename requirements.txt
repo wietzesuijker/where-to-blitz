@@ -1,0 +1,17 @@
+# Reproduce both notebooks (no credentials; public Arbutus COGs, TiTiler, iNat 228908):
+#   uv venv --python 3.11 .venv && uv pip install --python .venv/bin/python -r requirements.txt
+#   .venv/bin/python -m pytest -q test_ingest_stats.py        # 22 tests, live data
+#   # serving demo (live fetch, ~30s):
+#   .venv/bin/python _build_notebook.py && .venv/bin/jupyter nbconvert --to notebook --execute --inplace openbiodiversity-serving-demo.ipynb
+#   # VOI backtest (reads cached cluster_results/inat_*.csv; re-pull with pull_inat_backtest.py):
+#   .venv/bin/python _build_backtest_notebook.py && .venv/bin/jupyter nbconvert --to notebook --execute --inplace voi-backtest.ipynb
+rasterio==1.4.4
+numpy==2.4.6
+pandas==3.0.3
+matplotlib==3.11.0
+requests==2.34.2
+pystac==1.14.3
+nbformat==5.10.4
+jupyter==1.1.1
+ipykernel==7.3.0
+pytest

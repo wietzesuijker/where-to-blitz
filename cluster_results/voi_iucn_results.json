@@ -1,0 +1,97 @@
+[
+  {
+    "taxon": "Amphibia",
+    "n_cells_rarefied": 106,
+    "perm_p_floor": 0.0005,
+    "K": 5,
+    "n_species": 25,
+    "weighted_discovery": {
+      "spearman": 0.49322690951262826,
+      "perm_p": 0.0,
+      "null_sd": 0.0977729297057513
+    },
+    "unweighted_discovery": {
+      "spearman": 0.49322690951262826,
+      "perm_p": 0.0
+    },
+    "discovery_rarity_vs_priority": {
+      "spearman": 0.5890301515127156,
+      "perm_p": 0.0,
+      "null_sd": 0.09888000175021806
+    },
+    "mean_rarity_top": 0.941111111111111,
+    "mean_rarity_bottom": 0.4672222222222222,
+    "rarity_ratio_top_vs_bottom": 2.014268727705113,
+    "weight_tag": "iucn",
+    "iucn_categories": {
+      "LC": 21,
+      "null": 4
+    }
+  },
+  {
+    "taxon": "Reptilia",
+    "n_cells_rarefied": 75,
+    "perm_p_floor": 0.0005,
+    "K": 5,
+    "n_species": 33,
+    "weighted_discovery": {
+      "spearman": 0.6137448831939631,
+      "perm_p": 0.0,
+      "null_sd": 0.11481610145244582
+    },
+    "unweighted_discovery": {
+      "spearman": 0.6137448831939631,
+      "perm_p": 0.0
+    },
+    "discovery_rarity_vs_priority": {
+      "spearman": 0.6807267259052522,
+      "perm_p": 0.0,
+      "null_sd": 0.11672547833955167
+    },
+    "mean_rarity_top": 0.9584,
+    "mean_rarity_bottom": 0.5516,
+    "rarity_ratio_top_vs_bottom": 1.7374909354604788,
+    "weight_tag": "iucn",
+    "iucn_categories": {
+      "LC": 19,
+      "null": 10,
+      "NE": 3,
+      "VU": 1
+    }
+  },
+  {
+    "taxon": "Mammalia",
+    "n_cells_rarefied": 169,
+    "perm_p_floor": 0.0005,
+    "K": 5,
+    "n_species": 148,
+    "weighted_discovery": {
+      "spearman": 0.599146217518221,
+      "perm_p": 0.0,
+      "null_sd": 0.07563953452335888
+    },
+    "unweighted_discovery": {
+      "spearman": 0.6410636828507152,
+      "perm_p": 0.0
+    },
+    "discovery_rarity_vs_priority": {
+      "spearman": 0.585248080996389,
+      "perm_p": 0.0,
+      "null_sd": 0.07717684977202142
+    },
+    "mean_rarity_top": 1.082830459770115,
+    "mean_rarity_bottom": 0.6852982456140351,
+    "rarity_ratio_top_vs_bottom": 1.5800864320028816,
+    "weight_tag": "iucn",
+    "iucn_categories": {
+      "null": 35,
+      "LC": 86,
+      "NE": 14,
+      "NT": 2,
+      "EN": 4,
+      "VU": 3,
+      "DD": 3,
+      "CR": 1
+    }
+  }
+]

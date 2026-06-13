@@ -1,0 +1,172 @@
+[
+  {
+    "taxon": "Amphibia",
+    "n_cells": 250,
+    "traveltime_vs_effort": -0.2683081180907068,
+    "traveltime_vs_priority": 0.29461405118727246,
+    "traveltime_vs_discovery_rarefied": 0.07933685810273447,
+    "reachable_frontier": {
+      "<= 60min": {
+        "cells_kept_%": 18.4,
+        "new_species_kept_%": 29.5,
+        "median_travel_min_kept": 34.0
+      },
+      "<= 120min": {
+        "cells_kept_%": 31.1,
+        "new_species_kept_%": 46.3,
+        "median_travel_min_kept": 47.0
+      },
+      "<= 240min": {
+        "cells_kept_%": 60.5,
+        "new_species_kept_%": 71.2,
+        "median_travel_min_kept": 114.0
+      },
+      "<= 480min": {
+        "cells_kept_%": 87.9,
+        "new_species_kept_%": 94.0,
+        "median_travel_min_kept": 187.0
+      }
+    },
+    "median_travel_all_min": 208.5,
+    "top20_priority_median_travel_min": 224.0,
+    "top20_roi_median_travel_min": 84.0,
+    "top20_priority_newspecies": 51,
+    "top20_roi_newspecies": 61
+  },
+  {
+    "taxon": "Aves",
+    "n_cells": 411,
+    "traveltime_vs_effort": -0.4000529802356366,
+    "traveltime_vs_priority": 0.38496273752702387,
+    "traveltime_vs_discovery_rarefied": 0.18416045416319565,
+    "reachable_frontier": {
+      "<= 60min": {
+        "cells_kept_%": 17.7,
+        "new_species_kept_%": 38.8,
+        "median_travel_min_kept": 35.5
+      },
+      "<= 120min": {
+        "cells_kept_%": 32.5,
+        "new_species_kept_%": 50.1,
+        "median_travel_min_kept": 57.0
+      },
+      "<= 240min": {
+        "cells_kept_%": 64.7,
+        "new_species_kept_%": 80.4,
+        "median_travel_min_kept": 119.0
+      },
+      "<= 480min": {
+        "cells_kept_%": 89.6,
+        "new_species_kept_%": 95.1,
+        "median_travel_min_kept": 174.0
+      }
+    },
+    "median_travel_all_min": 193.0,
+    "top20_priority_median_travel_min": 285.0,
+    "top20_roi_median_travel_min": 127.0,
+    "top20_priority_newspecies": 127,
+    "top20_roi_newspecies": 151
+  },
+  {
+    "taxon": "Insecta",
+    "n_cells": 381,
+    "traveltime_vs_effort": -0.32980586688303126,
+    "traveltime_vs_priority": 0.3188293468776291,
+    "traveltime_vs_discovery_rarefied": 0.14670709479604288,
+    "reachable_frontier": {
+      "<= 60min": {
+        "cells_kept_%": 20.3,
+        "new_species_kept_%": 31.2,
+        "median_travel_min_kept": 37.0
+      },
+      "<= 120min": {
+        "cells_kept_%": 31.9,
+        "new_species_kept_%": 40.0,
+        "median_travel_min_kept": 47.5
+      },
+      "<= 240min": {
+        "cells_kept_%": 66.7,
+        "new_species_kept_%": 77.5,
+        "median_travel_min_kept": 124.0
+      },
+      "<= 480min": {
+        "cells_kept_%": 90.3,
+        "new_species_kept_%": 97.6,
+        "median_travel_min_kept": 183.0
+      }
+    },
+    "median_travel_all_min": 192.0,
+    "top20_priority_median_travel_min": 201.0,
+    "top20_roi_median_travel_min": 141.0,
+    "top20_priority_newspecies": 197,
+    "top20_roi_newspecies": 196
+  },
+  {
+    "taxon": "Mammalia",
+    "n_cells": 484,
+    "traveltime_vs_effort": -0.33281291073404856,
+    "traveltime_vs_priority": 0.2990799568538328,
+    "traveltime_vs_discovery_rarefied": 0.1598130456114461,
+    "reachable_frontier": {
+      "<= 60min": {
+        "cells_kept_%": 13.8,
+        "new_species_kept_%": 22.2,
+        "median_travel_min_kept": 35.0
+      },
+      "<= 120min": {
+        "cells_kept_%": 27.3,
+        "new_species_kept_%": 40.3,
+        "median_travel_min_kept": 58.0
+      },
+      "<= 240min": {
+        "cells_kept_%": 55.9,
+        "new_species_kept_%": 68.2,
+        "median_travel_min_kept": 123.5
+      },
+      "<= 480min": {
+        "cells_kept_%": 81.4,
+        "new_species_kept_%": 88.6,
+        "median_travel_min_kept": 184.0
+      }
+    },
+    "median_travel_all_min": 219.0,
+    "top20_priority_median_travel_min": 283.0,
+    "top20_roi_median_travel_min": 109.0,
+    "top20_priority_newspecies": 93,
+    "top20_roi_newspecies": 122
+  },
+  {
+    "taxon": "Reptilia",
+    "n_cells": 153,
+    "traveltime_vs_effort": -0.42793818963489383,
+    "traveltime_vs_priority": 0.3907943352525847,
+    "traveltime_vs_discovery_rarefied": 0.39146149736895564,
+    "reachable_frontier": {
+      "<= 60min": {
+        "cells_kept_%": 20.2,
+        "new_species_kept_%": 21.5,
+        "median_travel_min_kept": 20.0
+      },
+      "<= 120min": {
+        "cells_kept_%": 34.2,
+        "new_species_kept_%": 32.5,
+        "median_travel_min_kept": 44.0
+      },
+      "<= 240min": {
+        "cells_kept_%": 71.9,
+        "new_species_kept_%": 74.1,
+        "median_travel_min_kept": 126.5
+      },
+      "<= 480min": {
+        "cells_kept_%": 97.4,
+        "new_species_kept_%": 99.6,
+        "median_travel_min_kept": 185.0
+      }
+    },
+    "median_travel_all_min": 188.0,
+    "top20_priority_median_travel_min": 237.5,
+    "top20_roi_median_travel_min": 84.5,
+    "top20_priority_newspecies": 35,
+    "top20_roi_newspecies": 34
+  }
+]

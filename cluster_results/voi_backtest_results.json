@@ -1,0 +1,392 @@
+[
+  {
+    "taxon": "Amphibia",
+    "n_cells": 278,
+    "n_revisited": 212,
+    "n_train": 1102,
+    "n_test": 3853,
+    "total_new_species": 322,
+    "perm_p_floor": 0.0005,
+    "spearman_priority_newcount": -0.26482308796029974,
+    "K": 5,
+    "n_cells_rarefied": 106,
+    "rarefied_priority": {
+      "spearman": 0.49322690951262826,
+      "perm_p": 0.0,
+      "null_mean": -0.0012148894397994714,
+      "null_sd": 0.09723766273216697
+    },
+    "rarefied_staleness": {
+      "spearman": 0.36972196511192207
+    },
+    "rarefied_ratio_top_vs_bottom": 2.416003441600344,
+    "rare_newK_top": 1.5599999999999998,
+    "rare_newK_bottom": 0.6456944444444443,
+    "rate_median_top": 0.25,
+    "rate_median_bottom": 0.08333333333333333,
+    "rate_priority": {
+      "spearman": 0.3101213426901868,
+      "perm_p": 0.0,
+      "null_mean": -0.0002879562765550503,
+      "null_sd": 0.06881510555002997
+    },
+    "rate_scarcity": {
+      "spearman": 0.38393201607030975,
+      "perm_p": 0.0,
+      "null_mean": -0.00034090342604958443,
+      "null_sd": 0.06844528499688136
+    },
+    "rate_staleness": {
+      "spearman": 0.13215965689514678,
+      "perm_p": 0.0525,
+      "null_mean": 0.002127407412075932,
+      "null_sd": 0.06872213174694275
+    },
+    "rate_density": {
+      "spearman": -0.38393201607030975,
+      "perm_p": 0.0,
+      "null_mean": -0.0015417273027624426,
+      "null_sd": 0.06860439523877836
+    },
+    "rate_chao_unseen": {
+      "spearman": -0.3401717649024381,
+      "perm_p": 0.0,
+      "null_mean": 1.70072336113396e-05,
+      "null_sd": 0.06863881497101963
+    },
+    "lift_priority": {
+      "topk": 56,
+      "n_cells": 278,
+      "captured": 0.17701863354037267,
+      "area_baseline": 0.2014388489208633,
+      "lift_vs_area": 0.87877107364685
+    },
+    "lift_random": 1.0,
+    "lift_scarcity": {
+      "topk": 56,
+      "n_cells": 278,
+      "captured": 0.13975155279503104,
+      "area_baseline": 0.2014388489208633,
+      "lift_vs_area": 0.6937666370896184
+    },
+    "lift_density_antipriority": {
+      "topk": 56,
+      "n_cells": 278,
+      "captured": 0.33229813664596275,
+      "area_baseline": 0.2014388489208633,
+      "lift_vs_area": 1.6496228926353151
+    }
+  },
+  {
+    "taxon": "Aves",
+    "n_cells": 456,
+    "n_revisited": 291,
+    "n_train": 6000,
+    "n_test": 6768,
+    "total_new_species": 1939,
+    "perm_p_floor": 0.0005,
+    "spearman_priority_newcount": -0.5483371713481384,
+    "K": 5,
+    "n_cells_rarefied": 152,
+    "rarefied_priority": {
+      "spearman": 0.5629495891580434,
+      "perm_p": 0.0,
+      "null_mean": 0.0018235064185801943,
+      "null_sd": 0.08196983820656008
+    },
+    "rarefied_staleness": {
+      "spearman": 0.3929083348727159
+    },
+    "rarefied_ratio_top_vs_bottom": 1.6738594484686744,
+    "rare_newK_top": 3.8739999999999997,
+    "rare_newK_bottom": 2.3144117647058824,
+    "rate_median_top": 1.0,
+    "rate_median_bottom": 0.45227272727272727,
+    "rate_priority": {
+      "spearman": 0.5572649304739434,
+      "perm_p": 0.0,
+      "null_mean": -0.0004597033195918685,
+      "null_sd": 0.05922690826617297
+    },
+    "rate_scarcity": {
+      "spearman": 0.577801909465766,
+      "perm_p": 0.0,
+      "null_mean": 0.0038043891044996403,
+      "null_sd": 0.05920242981619467
+    },
+    "rate_staleness": {
+      "spearman": 0.3625569404719479,
+      "perm_p": 0.0,
+      "null_mean": -0.0015016900410217671,
+      "null_sd": 0.058349708920540644
+    },
+    "rate_density": {
+      "spearman": -0.577801909465766,
+      "perm_p": 0.0,
+      "null_mean": -0.0006562273587934828,
+      "null_sd": 0.060773705859538056
+    },
+    "rate_chao_unseen": {
+      "spearman": -0.43790248600769865,
+      "perm_p": 0.0,
+      "null_mean": 0.0018258823046742128,
+      "null_sd": 0.05906623259490736
+    },
+    "lift_priority": {
+      "topk": 91,
+      "n_cells": 456,
+      "captured": 0.05466735430634347,
+      "area_baseline": 0.19956140350877194,
+      "lift_vs_area": 0.27393751168892994
+    },
+    "lift_random": 1.0,
+    "lift_scarcity": {
+      "topk": 91,
+      "n_cells": 456,
+      "captured": 0.05105724600309438,
+      "area_baseline": 0.19956140350877194,
+      "lift_vs_area": 0.25584729865286854
+    },
+    "lift_density_antipriority": {
+      "topk": 91,
+      "n_cells": 456,
+      "captured": 0.591026302217638,
+      "area_baseline": 0.19956140350877194,
+      "lift_vs_area": 2.961626305618054
+    }
+  },
+  {
+    "taxon": "Insecta",
+    "n_cells": 412,
+    "n_revisited": 231,
+    "n_train": 5595,
+    "n_test": 7169,
+    "total_new_species": 2390,
+    "perm_p_floor": 0.0005,
+    "spearman_priority_newcount": -0.5552200377286447,
+    "K": 5,
+    "n_cells_rarefied": 116,
+    "rarefied_priority": {
+      "spearman": 0.5120446562983344,
+      "perm_p": 0.0,
+      "null_mean": -0.0019151423715327773,
+      "null_sd": 0.09074437358145311
+    },
+    "rarefied_staleness": {
+      "spearman": 0.23520472387527927
+    },
+    "rarefied_ratio_top_vs_bottom": 1.4010507669147476,
+    "rare_newK_top": 4.244285714285714,
+    "rare_newK_bottom": 3.029358974358974,
+    "rate_median_top": 1.0,
+    "rate_median_bottom": 0.5405405405405406,
+    "rate_priority": {
+      "spearman": 0.5078782928769242,
+      "perm_p": 0.0,
+      "null_mean": -0.000581546488605987,
+      "null_sd": 0.06582817866259982
+    },
+    "rate_scarcity": {
+      "spearman": 0.5171786427488703,
+      "perm_p": 0.0,
+      "null_mean": 0.0013670378675887788,
+      "null_sd": 0.06591884047115093
+    },
+    "rate_staleness": {
+      "spearman": 0.2743439067986471,
+      "perm_p": 0.0,
+      "null_mean": 0.0014245723736557797,
+      "null_sd": 0.06509953841488851
+    },
+    "rate_density": {
+      "spearman": -0.5171786427488703,
+      "perm_p": 0.0,
+      "null_mean": 0.0015708286344442003,
+      "null_sd": 0.06541928049798951
+    },
+    "rate_chao_unseen": {
+      "spearman": -0.4962340433602297,
+      "perm_p": 0.0,
+      "null_mean": 7.323881481055306e-05,
+      "null_sd": 0.06632076541445274
+    },
+    "lift_priority": {
+      "topk": 82,
+      "n_cells": 412,
+      "captured": 0.05481171548117155,
+      "area_baseline": 0.19902912621359223,
+      "lift_vs_area": 0.27539544851515463
+    },
+    "lift_random": 1.0,
+    "lift_scarcity": {
+      "topk": 82,
+      "n_cells": 412,
+      "captured": 0.04435146443514645,
+      "area_baseline": 0.19902912621359223,
+      "lift_vs_area": 0.22283906521073582
+    },
+    "lift_density_antipriority": {
+      "topk": 82,
+      "n_cells": 412,
+      "captured": 0.6246861924686192,
+      "area_baseline": 0.19902912621359223,
+      "lift_vs_area": 3.1386672109398916
+    }
+  },
+  {
+    "taxon": "Mammalia",
+    "n_cells": 536,
+    "n_revisited": 355,
+    "n_train": 4164,
+    "n_test": 6500,
+    "total_new_species": 889,
+    "perm_p_floor": 0.0005,
+    "spearman_priority_newcount": -0.479199688021334,
+    "K": 5,
+    "n_cells_rarefied": 169,
+    "rarefied_priority": {
+      "spearman": 0.6410636828507152,
+      "perm_p": 0.0,
+      "null_mean": 0.0006290698528904901,
+      "null_sd": 0.07814137375628595
+    },
+    "rarefied_staleness": {
+      "spearman": 0.5072647409357052
+    },
+    "rarefied_ratio_top_vs_bottom": 2.9192089086798085,
+    "rare_newK_top": 2.554051724137931,
+    "rare_newK_bottom": 0.8749122807017544,
+    "rate_median_top": 0.8452380952380952,
+    "rate_median_bottom": 0.15151515151515152,
+    "rate_priority": {
+      "spearman": 0.5284780472794044,
+      "perm_p": 0.0,
+      "null_mean": 2.828752237428342e-05,
+      "null_sd": 0.05277122200715153
+    },
+    "rate_scarcity": {
+      "spearman": 0.5402028151876432,
+      "perm_p": 0.0,
+      "null_mean": -0.00012517043696880974,
+      "null_sd": 0.0532701562505708
+    },
+    "rate_staleness": {
+      "spearman": 0.39243325354837016,
+      "perm_p": 0.0,
+      "null_mean": 0.0001615843408875211,
+      "null_sd": 0.05249334237491875
+    },
+    "rate_density": {
+      "spearman": -0.5402028151876432,
+      "perm_p": 0.0,
+      "null_mean": -0.000798337478716919,
+      "null_sd": 0.052656204582880874
+    },
+    "rate_chao_unseen": {
+      "spearman": -0.41514202660762933,
+      "perm_p": 0.0,
+      "null_mean": 0.0008622559588246804,
+      "null_sd": 0.053394041068997616
+    },
+    "lift_priority": {
+      "topk": 107,
+      "n_cells": 536,
+      "captured": 0.08661417322834646,
+      "area_baseline": 0.19962686567164178,
+      "lift_vs_area": 0.4338803443962028
+    },
+    "lift_random": 1.0,
+    "lift_scarcity": {
+      "topk": 107,
+      "n_cells": 536,
+      "captured": 0.09111361079865017,
+      "area_baseline": 0.19962686567164178,
+      "lift_vs_area": 0.45641958306613545
+    },
+    "lift_density_antipriority": {
+      "topk": 107,
+      "n_cells": 536,
+      "captured": 0.44881889763779526,
+      "area_baseline": 0.19962686567164178,
+      "lift_vs_area": 2.248289057325778
+    }
+  },
+  {
+    "taxon": "Reptilia",
+    "n_cells": 179,
+    "n_revisited": 137,
+    "n_train": 851,
+    "n_test": 2193,
+    "total_new_species": 285,
+    "perm_p_floor": 0.0005,
+    "spearman_priority_newcount": -0.3984461341044826,
+    "K": 5,
+    "n_cells_rarefied": 75,
+    "rarefied_priority": {
+      "spearman": 0.6137448831939631,
+      "perm_p": 0.0,
+      "null_mean": -0.003402004394478163,
+      "null_sd": 0.11669837634936188
+    },
+    "rarefied_staleness": {
+      "spearman": 0.42532206172026543
+    },
+    "rarefied_ratio_top_vs_bottom": 2.8106975597732315,
+    "rare_newK_top": 2.2806,
+    "rare_newK_bottom": 0.8114,
+    "rate_median_top": 0.5902777777777778,
+    "rate_median_bottom": 0.10555555555555556,
+    "rate_priority": {
+      "spearman": 0.45375182434171923,
+      "perm_p": 0.0,
+      "null_mean": -1.6182296352735102e-05,
+      "null_sd": 0.08529493958425613
+    },
+    "rate_scarcity": {
+      "spearman": 0.510186990847594,
+      "perm_p": 0.0,
+      "null_mean": 0.0007487975182327761,
+      "null_sd": 0.08390004067033785
+    },
+    "rate_staleness": {
+      "spearman": 0.3170640221463025,
+      "perm_p": 0.0,
+      "null_mean": 0.0003722308521107456,
+      "null_sd": 0.08502122768577001
+    },
+    "rate_density": {
+      "spearman": -0.510186990847594,
+      "perm_p": 0.0,
+      "null_mean": 0.00030315003443016686,
+      "null_sd": 0.08634552460403576
+    },
+    "rate_chao_unseen": {
+      "spearman": -0.3927878526631986,
+      "perm_p": 0.0,
+      "null_mean": -0.0013204419625783802,
+      "null_sd": 0.08551471525093975
+    },
+    "lift_priority": {
+      "topk": 36,
+      "n_cells": 179,
+      "captured": 0.11578947368421053,
+      "area_baseline": 0.2011173184357542,
+      "lift_vs_area": 0.5757309941520468
+    },
+    "lift_random": 1.0,
+    "lift_scarcity": {
+      "topk": 36,
+      "n_cells": 179,
+      "captured": 0.13333333333333333,
+      "area_baseline": 0.2011173184357542,
+      "lift_vs_area": 0.662962962962963
+    },
+    "lift_density_antipriority": {
+      "topk": 36,
+      "n_cells": 179,
+      "captured": 0.312280701754386,
+      "area_baseline": 0.2011173184357542,
+      "lift_vs_area": 1.552729044834308
+    }
+  }
+]

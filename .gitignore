@@ -1,0 +1,12 @@
+# Python env / caches
+.venv/
+__pycache__/
+*.pyc
+
+# OS
+.DS_Store
+
+# Heavy, re-derivable raster inputs (CHELSA/Hansen/Weiss clips) and raw iNat pulls
+*.tif
+cluster_results/inat_*.csv
+*.log

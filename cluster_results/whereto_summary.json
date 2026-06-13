@@ -1,0 +1,72 @@
+{
+  "Amphibia": {
+    "n_cells": 278,
+    "objectives": [
+      "o_discover",
+      "o_conservation",
+      "o_staleness",
+      "o_env_coverage",
+      "o_urgency"
+    ]
+  },
+  "Aves": {
+    "n_cells": 456,
+    "objectives": [
+      "o_discover",
+      "o_conservation",
+      "o_staleness",
+      "o_env_coverage",
+      "o_urgency"
+    ]
+  },
+  "Fungi": {
+    "n_cells": 300,
+    "objectives": [
+      "o_discover",
+      "o_conservation",
+      "o_staleness",
+      "o_env_coverage",
+      "o_urgency"
+    ]
+  },
+  "Insecta": {
+    "n_cells": 412,
+    "objectives": [
+      "o_discover",
+      "o_conservation",
+      "o_staleness",
+      "o_env_coverage",
+      "o_urgency"
+    ]
+  },
+  "Mammalia": {
+    "n_cells": 536,
+    "objectives": [
+      "o_discover",
+      "o_conservation",
+      "o_staleness",
+      "o_env_coverage",
+      "o_urgency"
+    ]
+  },
+  "Plantae": {
+    "n_cells": 185,
+    "objectives": [
+      "o_discover",
+      "o_conservation",
+      "o_staleness",
+      "o_env_coverage",
+      "o_urgency"
+    ]
+  },
+  "Reptilia": {
+    "n_cells": 179,
+    "objectives": [
+      "o_discover",
+      "o_conservation",
+      "o_staleness",
+      "o_env_coverage",
+      "o_urgency"
+    ]
+  }
+}
