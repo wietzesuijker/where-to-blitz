@@ -337,9 +337,13 @@ function contribStr(r){const c=contribs(r).slice(0,3).map(x=>x.nm.toLowerCase()+
 
 const HALF=0.125;   // half a 0.25-deg cell
 function buildMarkers(){
+  const rs=rows();
+  // The 0.25° grid geometry is identical across taxa, so after the first build a taxon
+  // switch only swaps each cell's data row + restyles -- no 3478-rectangle teardown/rebuild.
+  if(markers.length===rs.length){markers.forEach((m,i)=>m.r=rs[i]);recolour();return;}
   markers.forEach(m=>map.removeLayer(m.mk));markers=[];
-  for(const r of rows()){const mk=L.rectangle([[r[0]-HALF,r[1]-HALF],[r[0]+HALF,r[1]+HALF]],{stroke:false,fillOpacity:.5});
-    mk.on('click',e=>{state.view==='explore'?exploreCell(r[0],r[1]):setStart(e.latlng.lat,e.latlng.lng);});   // explore: show what to record here; plan: set start
+  for(const r of rs){const mk=L.rectangle([[r[0]-HALF,r[1]-HALF],[r[0]+HALF,r[1]+HALF]],{stroke:false,fillOpacity:.5});
+    mk.on('click',e=>{state.view==='explore'?exploreCell(r[0],r[1]):setStart(e.latlng.lat,e.latlng.lng);});   // r[0],r[1] are invariant across taxa
     mk.addTo(map);markers.push({mk,r});}
   recolour();
 }
