@@ -43,7 +43,7 @@
     "env": "REAL (CHELSA climate surprisal, density-weighted)",
     "travel_min": "REAL (Weiss 2018 travel-time)",
     "n_train": "REAL-proxy (density x cell km2)",
-    "urgency": "DEFERRED (0)",
+    "urgency": "REAL (Hansen loss fraction)",
     "staleness": "APPROX (inverse-density proxy, no per-record dates)",
     "conservation": "APPROX (0; no national rarity/IUCN join)"
   },
