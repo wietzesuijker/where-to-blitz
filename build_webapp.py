@@ -575,7 +575,7 @@ function geColour(m){const v=GE[gekey(m.r[0],m.r[1])];if(!v)return GE_ALL;return
 // cell that IS a strong gap. Never inflate the score to do it.
 const LOW_GAP_T=0.15, STRONG_GAP_T=0.5;
 let geGapSeq=0;
-function nearestStrongGap(lat,lon){let best=null,bd=1e9;for(const m of markers){if((m.t||0)<STRONG_GAP_T)continue;const d=haversine(lat,lon,m.r[0],m.r[1]);if(d>1&&d<bd){bd=d;best=m;}}return best?{m:best,km:bd}:null;}
+function nearestStrongGap(lat,lon){let best=null,bd=1e9;for(const m of markers){if((m.t||0)<STRONG_GAP_T)continue;if(Math.abs(m.r[0]-lat)*111>=bd)continue;const d=haversine(lat,lon,m.r[0],m.r[1]);if(d>1&&d<bd){bd=d;best=m;}}return best?{m:best,km:bd}:null;}
 function geGapPhrase(lat,lon){if(!GE_LOADED)return '';const v=GE[gekey(lat,lon)];return(!v||v[0]<0)?'':t('pop_ge_gap',t('ge_cats')[v[0]]);}
 function exploreToPlan(lat,lon){setView('plan');setStart(lat,lon);planTrip();}
 const IDX={discover:2,conservation:3,env:4,staleness:5,urgency:6}, TT=7, NTR=8;
@@ -666,6 +666,7 @@ function fmth(h){if(h>=24){const d=Math.floor(h/24),hr=Math.round(h%24);return d
 function haversine(a,b,c,d){const R=6371,r=Math.PI/180,x=(c-a)*r,y=(d-b)*r,h=Math.sin(x/2)**2+Math.cos(a*r)*Math.cos(c*r)*Math.sin(y/2)**2;return 2*R*Math.asin(Math.sqrt(h));}
 
 const map=L.map('map',{zoomControl:true,preferCanvas:true}).setView([58,-96],4);
+let _ppf=null;map.on('popupopen',()=>{_ppf=document.activeElement;});map.on('popupclose',()=>{try{if(_ppf&&_ppf.focus)_ppf.focus();}catch(e){}_ppf=null;});
 const ATTR='&copy; OpenStreetMap contributors · routing &copy; OSRM';
 const BASEMAPS={
   "OpenStreetMap":{url:'https://tile.openstreetmap.org/{z}/{x}/{y}.png',opt:{maxZoom:19}},
@@ -1055,11 +1056,11 @@ async function renderInsights(){
   html+='<div class="grp"><span class="lbl">'+t('ins_goals')+'</span>'+OBJ.map((o,i)=>`<span class="chip ${state.insGoals.includes(i)?'on':''}" role="button" tabindex="0" aria-pressed="${state.insGoals.includes(i)}" data-gl="${i}">${objName(i)}</span>`).join('')+'</div></div>';
   html+=`<div class="matrix" style="grid-template-columns:100px repeat(${goalsOn.length},1fr)"><div></div>`;
   goalsOn.forEach(gi=>html+=`<div class="gh">${objName(gi)}<span class="gq">${objQ(gi)}</span></div>`);
-  rowsTaxa.forEach(tx=>{html+=`<div class="rl">${groupName(tx)}</div>`;goalsOn.forEach(gi=>html+=`<div class="cell" data-tx="${tx}" data-gl="${gi}"><canvas width="220" height="170"></canvas></div>`);});
+  rowsTaxa.forEach(tx=>{html+=`<div class="rl">${groupName(tx)}</div>`;goalsOn.forEach(gi=>html+=`<div class="cell" tabindex="0" role="button" aria-label="${groupName(tx)}, ${objName(gi)}" data-tx="${tx}" data-gl="${gi}"><canvas width="220" height="170"></canvas></div>`);});
   html+='</div><div class="idis" id="idis"></div>';
   ins.innerHTML=html;
   ins.querySelectorAll('.cell').forEach(c=>{drawMini(c.querySelector('canvas'),DATA[c.dataset.tx],+c.dataset.gl);
-    c.onclick=()=>{const tx=c.dataset.tx,gi=+c.dataset.gl;taxonSel.value=tx;state.taxon=tx;loadGroup(tx).then(()=>{buildMarkers();applyWeights(OBJ.map((_,i)=>i===gi?1:0),objName(gi));setView('plan');});};});
+    c.onclick=()=>{const tx=c.dataset.tx,gi=+c.dataset.gl;taxonSel.value=tx;state.taxon=tx;loadGroup(tx).then(()=>{buildMarkers();applyWeights(OBJ.map((_,i)=>i===gi?1:0),objName(gi));setView('plan');});};c.onkeydown=ev=>{if(ev.key==='Enter'||ev.key===' '){ev.preventDefault();c.click();}};});
   ins.querySelectorAll('.chip[data-tx]').forEach(ch=>{ch.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();ch.click();}};ch.onclick=()=>{const t=ch.dataset.tx,i=state.insTaxa.indexOf(t);if(i>=0){if(state.insTaxa.length>1)state.insTaxa.splice(i,1);}else state.insTaxa.push(t);renderInsights();};});
   ins.querySelectorAll('.chip[data-gl]').forEach(ch=>{ch.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();ch.click();}};ch.onclick=()=>{const g=+ch.dataset.gl,i=state.insGoals.indexOf(g);if(i>=0){if(state.insGoals.length>1)state.insGoals.splice(i,1);}else state.insGoals.push(g);state.insGoals.sort((x,y)=>x-y);renderInsights();};});
   // If the conservation axis is degenerate (constant -- e.g. the national placeholder is 0
