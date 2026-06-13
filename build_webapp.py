@@ -111,13 +111,31 @@ details.adv>summary:hover{color:var(--ink)}
 #insights .cell canvas{width:100%;height:auto;background:#fbfbf6;border-radius:5px;display:block}
 #insights .idis{max-width:980px;margin:18px auto 0;color:var(--mut);font-size:14.5px;line-height:1.6;border-top:1px solid #243446;padding-top:12px}
 #insights .idis b{color:var(--ink)}
+.sechd{display:flex;align-items:center;gap:6px;margin:18px 0 8px}
+.sechd .sec{margin:0}
+.infobtn{cursor:pointer;width:16px;height:16px;border-radius:50%;border:1px solid var(--mut);color:var(--mut);font:italic 700 11px/14px Georgia,serif;text-align:center;flex:0 0 auto;user-select:none}
+.infobtn:hover{border-color:var(--acc);color:var(--acc)}
+.infobox{display:none;background:#0e1722;border:1px solid #2a3a4d;border-radius:8px;padding:9px 11px;margin:0 0 8px;font-size:12px;line-height:1.5;color:var(--mut)}
+.infobox.open{display:block}
+.infobox b{color:var(--ink)}
+.infobox ul{margin:5px 0 0;padding-left:15px}
+.infobox li{margin:3px 0}
 </style></head>
 <body><div id="app">
 <div id="panel">
   <h1>Where to <a href="https://blitzthegap.org" target="_blank" rel="noopener" style="color:var(--gd);text-decoration:underline">Blitz</a></h1>
   <p class="sub">Pick what counts as <b>impact</b> and how much time you have — the map finds the best spot you can reach and get back from.</p>
 
-  <div class="sec">Life group & goal</div>
+  <div class="sechd"><span class="sec">Life group & goal</span><span class="infobtn" title="Where do these scores come from?" onclick="document.getElementById('taxinfo').classList.toggle('open')">i</span></div>
+  <div class="infobox" id="taxinfo">
+    <b>Where the scores come from.</b> Real <a href="https://www.inaturalist.org" target="_blank" rel="noopener" style="color:var(--acc)">iNaturalist</a> observations in B.C., binned to ~25&nbsp;km cells.
+    <ul>
+      <li><b>“All biodiversity”</b> averages 7 life groups (amphibians, birds, fungi, insects, mammals, plants, reptiles).</li>
+      <li>Each group is a <b>recent sample</b> of iNat records, not the full archive — plants & fungi are capped (~10k each), so their maps are coarser.</li>
+      <li>Priority is <b>backtested</b>: holding back later-2025 sightings, higher-priority cells did turn up more new species.</li>
+    </ul>
+    A planning aid, not ground truth — please obscure sensitive species and respect Indigenous data sovereignty.
+  </div>
   <select id="taxon" class="full" style="margin-bottom:8px"></select>
   <div class="presets" id="presets"></div>
   <details class="adv"><summary>Fine-tune the five goals</summary><div id="objs"></div></details>
@@ -150,12 +168,12 @@ details.adv>summary:hover{color:var(--ink)}
       <span style="font-size:13.5px">Worth the drive</span>
       <select id="minratio" style="margin-left:auto">
         <option value="0">Any trip</option>
-        <option value="0.5" selected>Record ≥ ½ the drive</option>
-        <option value="1">Record ≥ the drive</option>
-        <option value="2">Record ≥ 2× the drive</option>
+        <option value="0.5" selected>Record ≥ ½ the round trip</option>
+        <option value="1">Record ≥ the round trip</option>
+        <option value="2">Record ≥ 2× the round trip</option>
       </select>
     </div>
-    <div style="color:var(--mut);font-size:11px;margin:0 0 8px">Drops mostly-driving trips. Default keeps recording at least half your drive time; pick "Any" to allow long hauls.</div>
+    <div style="color:var(--mut);font-size:11px;margin:0 0 8px">Drops mostly-driving trips. <b style="color:var(--ink)">Round trip = there and back</b> (both legs counted). Default: field time ≥ half your round-trip drive; pick "Any" for long hauls.</div>
     <label class="toggle"><input type="checkbox" id="lowc"> ♻︎ Prefer low-carbon trips</label>
     <div style="color:var(--mut);font-size:11px;margin:0 0 5px">Rank by impact per kg of travel CO₂.</div>
     <label class="toggle"><input type="checkbox" id="startProsp"> 🔭 Also show species around my start</label>
@@ -190,7 +208,7 @@ details.adv>summary:hover{color:var(--ink)}
 const DATA=__DATA__, OBJ=__OBJ__, PRESETS=__PRESETS__, DEFAULT=__DEFAULT__;
 const IDX={discover:2,conservation:3,env:4,staleness:5,urgency:6}, TT=7, NTR=8;
 const OSRM_BASE="https://routing.openstreetmap.de/";   // FOSSGIS public OSRM (car/bike/foot, CORS-enabled)
-const MODES={Drive:{host:'routed-car',kmh:60,emit:0.18,icon:'🚗'},Cycle:{host:'routed-bike',kmh:14,emit:0,icon:'🚲'},Walk:{host:'routed-foot',kmh:5,emit:0,icon:'🚶'}};
+const MODES={Walk:{host:'routed-foot',kmh:5,emit:0,icon:'🚶'},Cycle:{host:'routed-bike',kmh:14,emit:0,icon:'🚲'},Drive:{host:'routed-car',kmh:60,emit:0.18,icon:'🚗'}};
 const UNITS={Minutes:{toH:1/60,min:15,max:600,step:15,def:120},Hours:{toH:1,min:1,max:14,step:0.5,def:5},Days:{toH:24,min:1,max:21,step:1,def:2}};
 const ROAD_FACTOR=1.35, MIN_FIELD_H=0.5, N_CANDIDATES=8;
 function co2lbl(kg){return kg<=0?'car-free 🌿':'~'+(kg<10?kg.toFixed(1):Math.round(kg))+' kg CO₂';}
@@ -221,7 +239,7 @@ async function fetchProspects(lat,lon,where){
         return `<a class="sp" href="https://www.inaturalist.org/taxa/${t.id}" target="_blank" rel="noopener" title="${t.name}"><img src="${t.default_photo.square_url}" loading="lazy" alt=""><div class="nm">${r._here?'':'✦ '}${t.preferred_common_name||t.name}${rare?' <span class="rare">rare</span>':(unc?' <span class="unc">uncommon</span>':'')}</div><div class="ct">${r._here?r.count+' here':'nearby'} · ${g.toLocaleString()} worldwide</div></a>`;}).join('')+'</div>'+
       `<div style="margin-top:7px;font-size:11.5px"><a href="${ex}" target="_blank" rel="noopener" style="color:var(--acc)">Explore all on iNaturalist →</a> &nbsp;·&nbsp; <a href="https://www.inaturalist.org/observations/new" target="_blank" rel="noopener" style="color:var(--gd)">＋ Log a sighting</a></div>`;
     if(where==='Your destination' && destMarker && destMarker.getPopup()){
-      const thumbs='<div style="font-size:11px;color:#557;margin:9px 0 4px">Likely finds — tap a photo for details:</div><div style="display:flex;gap:6px">'+res.slice(0,4).map(r=>{const t=r.taxon,nm=t.preferred_common_name||t.name;return `<a href="https://www.inaturalist.org/taxa/${t.id}" target="_blank" rel="noopener" style="width:62px;text-decoration:none;color:#0a2a44" title="${t.name} — open on iNaturalist"><img src="${t.default_photo.square_url}" style="width:62px;height:62px;object-fit:cover;border-radius:7px;border:1px solid #cdd;display:block"><div style="font-size:10px;line-height:1.15;margin-top:3px;height:24px;overflow:hidden">${nm}</div></a>`;}).join('')+'</div>';
+      const thumbs='<div style="font-size:11px;color:#557;margin:9px 0 4px">Recorded in this area — tap a photo for details:</div><div style="display:flex;gap:6px">'+res.slice(0,4).map(r=>{const t=r.taxon,nm=t.preferred_common_name||t.name;return `<a href="https://www.inaturalist.org/taxa/${t.id}" target="_blank" rel="noopener" style="width:62px;text-decoration:none;color:#0a2a44" title="${t.name} — open on iNaturalist"><img src="${t.default_photo.square_url}" style="width:62px;height:62px;object-fit:cover;border-radius:7px;border:1px solid #cdd;display:block"><div style="font-size:10px;line-height:1.15;margin-top:3px;height:24px;overflow:hidden">${nm}</div></a>`;}).join('')+'</div>';
       destMarker.setPopupContent(destMarker.getPopup().getContent()+thumbs); destMarker.openPopup();
     }
   }catch(e){pr.innerHTML='<div class="hd">🔭 Couldn’t load species for this spot.</div>';}
@@ -330,7 +348,8 @@ OBJ.forEach(o=>{const d=document.createElement('div');d.className='obj';
 function applyWeights(arr,name){OBJ.forEach((o,i)=>{state.w[o.key]=arr[i];document.getElementById('s_'+o.key).value=arr[i];document.getElementById('v_'+o.key).textContent=arr[i].toFixed(2);});markPreset(name);recolour();replan();}
 const presetsDiv=document.getElementById('presets');
 function markPreset(name){[...presetsDiv.children].forEach(b=>b.classList.toggle('on',b.textContent===name));}
-Object.entries(PRESETS).forEach(([n,a])=>{const b=document.createElement('button');b.textContent=n;b.onclick=()=>applyWeights(a,n);presetsDiv.appendChild(b);});
+const PRESET_TIPS={'Biodiversity impact':'Default mix — leans to rare & at-risk species and habitat coverage, plus some discovery and urgency.','Discovery':'Go where few people have looked (pure under-sampling).','Conservation':'Go where range-restricted, rare species already are.','Habitat coverage':'Go where the climate / habitat is under-sampled.','Balanced':'Equal weight on discovery, rarity and habitat, plus freshness and urgency.'};
+Object.entries(PRESETS).forEach(([n,a])=>{const b=document.createElement('button');b.textContent=n;b.title=PRESET_TIPS[n]||'';b.onclick=()=>applyWeights(a,n);presetsDiv.appendChild(b);});
 markPreset('Biodiversity impact');
 
 const bmSel=document.getElementById('basemap');
@@ -353,7 +372,7 @@ const modesDiv=document.getElementById('modes');
 Object.keys(MODES).forEach(mn=>{const b=document.createElement('button');b.textContent=MODES[mn].icon+' '+mn;b.dataset.m=mn;
   b.onclick=()=>{state.mode=mn;[...modesDiv.children].forEach(x=>x.classList.toggle('on',x.dataset.m===mn));replan();};
   modesDiv.appendChild(b);});
-modesDiv.children[0].classList.add('on');
+[...modesDiv.children].forEach(x=>x.classList.toggle('on',x.dataset.m===state.mode));
 
 document.getElementById('setVan').onclick=()=>{map.panTo(VAN);setStart(VAN[0],VAN[1],'Vancouver');};
 document.getElementById('setMe').onclick=()=>{setStartLabel('locating…');
