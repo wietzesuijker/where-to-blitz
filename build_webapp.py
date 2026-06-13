@@ -6,7 +6,10 @@ start point + flexible time budget (minutes / hours / days); real driving routes
 option. Answers "from here, with this much time, where do I maximise my impact?"."""
 import json
 
-DATA = json.load(open("cluster_results/webapp_data.json"))
+# Canada-wide: fetch per-group at runtime (38k cells x 8 groups is too big to inline).
+# Inject only the group->filename map; the browser fetches each group's JSON on demand.
+CA_INDEX = json.load(open("cluster_results/ca/index.json"))
+FILES = CA_INDEX["files"]
 # rows: [lat, lon, discover, conservation, env, staleness, urgency, travel_min, n_train]
 OBJ = [
     {"key": "discover",     "name": "Discover the most species", "q": "go where few people have looked"},
@@ -153,12 +156,12 @@ details.adv>summary:hover{color:var(--ink)}
 
   <div class="sechd"><span class="sec">Life group & goal</span><span class="infobtn" title="Where do these scores come from?" role="button" tabindex="0" aria-label="About the data" aria-expanded="false" onclick="const b=document.getElementById('taxinfo').classList.toggle('open');this.setAttribute('aria-expanded',b)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click();}">i</span></div>
   <div class="infobox" id="taxinfo">
-    <b>Where the scores come from.</b> Real <a href="https://www.inaturalist.org" target="_blank" rel="noopener" style="color:var(--acc)">iNaturalist</a> observations in B.C., binned to ~25&nbsp;km cells.
+    <b>Where the scores come from.</b> Canada-wide, on a 0.25° (~25&nbsp;km) grid.
     <ul>
+      <li><b>Nationally, the real signal is <span style="color:var(--ink)">under-sampling</span> (“Discover the most species”) + <span style="color:var(--ink)">climate-coverage</span> (“Cover every habitat”).</b> These two axes are computed from real data (<a href="https://www.inaturalist.org" target="_blank" rel="noopener" style="color:var(--acc)">iNaturalist</a> density + CHELSA climate); travel time is real too.</li>
+      <li><b>Find rare species, Freshest gaps and Sample-before-it's-lost are approximate / being improved</b> — there's no national rarity, per-record date or forest-loss join yet, so those axes are placeholders (staleness ≈ inverse density; conservation/urgency ≈ 0).</li>
+      <li>The original <b>B.C. pilot had all five axes from real iNat history</b>; the national rollout starts with the two robust signals and fills in the rest.</li>
       <li><b>“All biodiversity”</b> averages 7 life groups (amphibians, birds, fungi, insects, mammals, plants, reptiles).</li>
-      <li>Each group is a <b>recent sample</b> of iNat records, not the full archive — plants & fungi are capped (~10k each), so their maps are coarser.</li>
-      <li>Priority is <b>backtested</b>: holding back later-2025 sightings, higher-priority cells tended to turn up more new species.</li>
-      <li>At-risk &amp; location-obscured species are <b>left out of suggestions</b> — we don't point people at them.</li>
     </ul>
     A planning aid, not ground truth — please obscure sensitive species and respect Indigenous data sovereignty. <a href="https://blitzthegap.org" target="_blank" rel="noopener" style="color:var(--acc)">How Blitz the Gap works →</a>
   </div>
@@ -233,7 +236,7 @@ details.adv>summary:hover{color:var(--ink)}
   <details class="adv"><summary>How impact is scored & data sources</summary>
     <div class="legend" style="margin-top:8px"><span>skip</span><div class="bar"></div><span>go here</span></div>
     <div style="color:var(--mut);font-size:11px;line-height:1.45;margin-top:7px">Each cell's <b style="color:var(--ink)">impact 0–100</b> is your goal mix, relative to the best cell shown. Hover a cell to see which goals drive it.</div>
-    <p class="foot"><b style="color:var(--ink)">How it works:</b> <a href="https://blitzthegap.org" target="_blank" rel="noopener" style="color:var(--acc)">Blitz the Gap</a> is a B.C.-wide bioblitz — head to a high-priority spot, record what you see on <a href="https://www.inaturalist.org" target="_blank" rel="noopener" style="color:var(--acc)">iNaturalist</a>, and your research-grade sightings flow into the <a href="https://www.inaturalist.org/projects/blitz-the-gap-2026-general" target="_blank" rel="noopener" style="color:var(--acc)">2026 project</a>, filling the map's gaps.<br><br>Scores from real iNaturalist observations (BC), tested by holding back later sightings. Drive/cycle/walk routes from OSRM (FOSSGIS); climate from CHELSA; forest loss from Hansen GFC. Driving CO₂ ≈ 0.18 kg/km; cycling/walking zero. A planning aid — obscure sensitive-species locations and respect Indigenous data-sovereignty before any public release.<br><br>This map spans many <b style="color:var(--ink)">Indigenous territories</b> — see whose at <a href="https://native-land.ca" target="_blank" rel="noopener" style="color:var(--acc)">native-land.ca</a>, and seek consent before recording on their lands.</p>
+    <p class="foot"><b style="color:var(--ink)">How it works:</b> <a href="https://blitzthegap.org" target="_blank" rel="noopener" style="color:var(--acc)">Blitz the Gap</a> is a Canada-wide bioblitz — head to a high-priority spot, record what you see on <a href="https://www.inaturalist.org" target="_blank" rel="noopener" style="color:var(--acc)">iNaturalist</a>, and your research-grade sightings flow into the <a href="https://www.inaturalist.org/projects/blitz-the-gap-2026-general" target="_blank" rel="noopener" style="color:var(--acc)">2026 project</a>, filling the map's gaps.<br><br>Nationally, the robust priority signal is <b style="color:var(--ink)">under-sampling</b> (iNaturalist density) + <b style="color:var(--ink)">climate coverage</b> (CHELSA); rarity, freshness and forest-loss urgency are approximate placeholders being improved. Drive/cycle/walk routes from OSRM (FOSSGIS); travel time from Weiss 2018. Driving CO₂ ≈ 0.18 kg/km; cycling/walking zero. A planning aid — obscure sensitive-species locations and respect Indigenous data-sovereignty before any public release.<br><br>This map spans many <b style="color:var(--ink)">Indigenous territories</b> — see whose at <a href="https://native-land.ca" target="_blank" rel="noopener" style="color:var(--acc)">native-land.ca</a>, and seek consent before recording on their lands.</p>
   </details>
   <details class="adv" ontoggle="renderCellTable()"><summary>♿ Top cells (accessible list)</summary><div id="celltable"></div></details>
 </div>
@@ -243,7 +246,9 @@ details.adv>summary:hover{color:var(--ink)}
 </div>
 
 <script>
-const DATA=__DATA__, OBJ=__OBJ__, PRESETS=__PRESETS__, DEFAULT=__DEFAULT__;
+const FILES=__FILES__, OBJ=__OBJ__, PRESETS=__PRESETS__, DEFAULT=__DEFAULT__;
+const DATA={}, DATA_DIR='cluster_results/ca/';
+async function loadGroup(g){if(DATA[g])return;const r=await fetch(DATA_DIR+FILES[g]);Object.assign(DATA,await r.json());}
 const IDX={discover:2,conservation:3,env:4,staleness:5,urgency:6}, TT=7, NTR=8;
 const OSRM_BASE="https://routing.openstreetmap.de/";   // FOSSGIS public OSRM (car/bike/foot, CORS-enabled)
 const MODES={Walk:{host:'routed-foot',kmh:5,emit:0,icon:'🚶'},Cycle:{host:'routed-bike',kmh:14,emit:0,icon:'🚲'},Drive:{host:'routed-car',kmh:60,emit:0.18,icon:'🚗'}};
@@ -314,7 +319,7 @@ function colour(t){t=Math.max(0,Math.min(1,t));const x=t*(RAMP.length-1),i=Math.
 function fmth(h){if(h>=24){const d=Math.floor(h/24),hr=Math.round(h%24);return d+'d'+(hr?(' '+hr+'h'):'');}const m=Math.round(h*60);return m>=60?Math.floor(m/60)+'h'+String(m%60).padStart(2,'0'):m+' min';}
 function haversine(a,b,c,d){const R=6371,r=Math.PI/180,x=(c-a)*r,y=(d-b)*r,h=Math.sin(x/2)**2+Math.cos(a*r)*Math.cos(c*r)*Math.sin(y/2)**2;return 2*R*Math.asin(Math.sqrt(h));}
 
-const map=L.map('map',{zoomControl:true}).setView([50.5,-123.5],6);
+const map=L.map('map',{zoomControl:true,preferCanvas:true}).setView([58,-96],4);
 const ATTR='&copy; OpenStreetMap contributors · routing &copy; OSRM';
 const BASEMAPS={
   "OpenStreetMap":{url:'https://tile.openstreetmap.org/{z}/{x}/{y}.png',opt:{maxZoom:19}},
@@ -358,7 +363,7 @@ setBase('Light & muted');
 let markers=[], routeLine=null, destMarker=null, destCell=null, lastFit=null, lastScored=null, planned=false;
 const VAN=[49.28,-123.12];
 const w0={}; OBJ.forEach((o,i)=>w0[o.key]=DEFAULT[i]);
-const state={taxon:(DATA["All biodiversity"]?"All biodiversity":Object.keys(DATA)[0]), w:w0, start:VAN.slice(), budget:5, maxLeg:0, minRatio:0.5, unit:'Hours', lowc:false, mode:'Drive', startProsp:false, view:'explore', project:'blitz-the-gap-2026-general'};
+const state={taxon:(FILES["All biodiversity"]?"All biodiversity":Object.keys(FILES)[0]), w:w0, start:VAN.slice(), budget:5, maxLeg:0, minRatio:0.5, unit:'Hours', lowc:false, mode:'Drive', startProsp:false, view:'explore', project:'blitz-the-gap-2026-general'};
 function debounce(fn,ms){let t;return(...a)=>{clearTimeout(t);t=setTimeout(()=>fn(...a),ms);};}
 const replan=debounce(()=>{if(planned)planTrip();},650);
 
@@ -377,7 +382,7 @@ const geocode=debounce((lat,lon,tag)=>{
     .then(r=>r.json()).then(j=>{const a=j.address||{};const nm=a.city||a.town||a.village||a.hamlet||a.county||a.state||((j.display_name||'').split(',')[0])||'here';
       setStartLabel((tag?tag+' · ':'')+'near '+nm);}).catch(()=>{});},600);
 
-function rows(){return DATA[state.taxon];}
+function rows(){return DATA[state.taxon]||[];}
 function impact(r){let s=0;for(const o of OBJ)s+=state.w[o.key]*(r[IDX[o.key]]||0);return s;}
 function contribs(r){return OBJ.map(o=>({nm:o.name,c:state.w[o.key]*(r[IDX[o.key]]||0),raw:r[IDX[o.key]]||0})).filter(x=>x.c>0).sort((a,b)=>b.c-a.c);}
 function contribStr(r){const c=contribs(r).slice(0,3).map(x=>x.nm.toLowerCase()+' '+(x.raw*100|0)); return c.length?c.join(' · '):'—';}
@@ -404,15 +409,18 @@ function renderCellTable(){
 function recolour(){
   const cov=document.getElementById('tgCoverage')&&document.getElementById('tgCoverage').checked;
   const vals=markers.map(m=>impact(m.r));const lo=Math.min(...vals),hi=Math.max(...vals),rng=(hi-lo)||1;
-  markers.forEach((m,i)=>{const t=(vals[i]-lo)/rng;m.t=t;m.mk.setStyle({fillColor:colour(t),fillOpacity:cov?0:0.1+0.62*t});
-    m.mk.bindTooltip(`<b>${(t*100|0)}/100</b> impact for your mix<br><span style="color:#46606f;font-size:11px">driven by: ${contribStr(m.r)}</span><br><span style="color:#8aa;font-size:10px">tap to start a trip here</span>`,{sticky:true,opacity:.97});});
+  // No per-cell tooltip: at ~38k cells binding one tooltip each tanks pan/zoom.
+  // Cells stay clickable -- the click popup already shows the cell's score & drivers.
+  markers.forEach((m,i)=>{const t=(vals[i]-lo)/rng;m.t=t;m.mk.setStyle({fillColor:colour(t),fillOpacity:cov?0:0.1+0.62*t});});
   renderCellTable();
 }
 
 // controls
 const taxonSel=document.getElementById('taxon');
-Object.keys(DATA).forEach(t=>{const o=document.createElement('option');o.value=t;o.textContent=TAXLBL[t]||t;taxonSel.appendChild(o);});
-taxonSel.value=state.taxon; taxonSel.onchange=()=>{state.taxon=taxonSel.value;buildMarkers();setCoverage();if(document.getElementById('insights').style.display==='block')renderInsights();};
+Object.keys(FILES).forEach(t=>{const o=document.createElement('option');o.value=t;o.textContent=TAXLBL[t]||t;taxonSel.appendChild(o);});
+taxonSel.value=state.taxon; taxonSel.onchange=()=>{state.taxon=taxonSel.value;
+  const pr=document.getElementById('prospects');if(pr)pr.innerHTML='<div class="hd">🔭 Loading '+(TAXLBL[state.taxon]||state.taxon)+'…</div>';
+  loadGroup(state.taxon).then(()=>{buildMarkers();setCoverage();if(document.getElementById('insights').style.display==='block')renderInsights();});};
 
 const objsDiv=document.getElementById('objs');
 OBJ.forEach(o=>{const d=document.createElement('div');d.className='obj';
@@ -469,7 +477,7 @@ function closeResults(){srEl.classList.remove('open');srEl.innerHTML='';}
 const doSearch=debounce(async q=>{
   if(q.trim().length<3){closeResults();return;}
   try{
-    const u=`https://nominatim.openstreetmap.org/search?format=jsonv2&limit=6&countrycodes=ca&viewbox=-139,60,-114,48&q=${encodeURIComponent(q)}`;
+    const u=`https://nominatim.openstreetmap.org/search?format=jsonv2&limit=6&countrycodes=ca&viewbox=-141,84,-52,41&q=${encodeURIComponent(q)}`;
     const r=await fetch(u,{headers:{'Accept-Language':'en'}}).then(r=>r.json());
     if(psEl.value.trim()!==q.trim())return;                       // stale
     if(!r.length){const d=document.createElement('div');d.className='res';d.style.cssText='color:var(--mut);cursor:default';d.textContent='No places found';srEl.replaceChildren(d);srEl.classList.add('open');return;}
@@ -594,7 +602,7 @@ function rankArr(a){const idx=a.map((v,i)=>[v,i]).sort((x,y)=>x[0]-y[0]);const r
   let i=0;while(i<idx.length){let j=i;while(j+1<idx.length&&idx[j+1][0]===idx[i][0])j++;const avg=(i+j)/2;for(let k=i;k<=j;k++)r[idx[k][1]]=avg;i=j+1;}  // average ranks for ties (proper Spearman; thousands of tied zeros otherwise distort it)
   return r;}
 function spear(a,b){const ra=rankArr(a),rb=rankArr(b),n=a.length;let ma=(n-1)/2,num=0,da=0,db=0;for(let i=0;i<n;i++){const x=ra[i]-ma,y=rb[i]-ma;num+=x*y;da+=x*x;db+=y*y;}return da&&db?num/Math.sqrt(da*db):0;}
-const BB={minlon:-139,maxlon:-114,minlat:48,maxlat:60};
+const BB={minlon:-141,maxlon:-52,minlat:41,maxlat:84};
 function drawMini(cv,rows,gi){
   const ctx=cv.getContext('2d'),W=cv.width,H=cv.height;ctx.clearRect(0,0,W,H);
   const vals=rows.map(r=>r[2+gi]),lo=Math.min(...vals),hi=Math.max(...vals),rng=(hi-lo)||1;
@@ -604,13 +612,14 @@ function drawMini(cv,rows,gi){
     ctx.fillStyle=colour(t);ctx.globalAlpha=0.14+0.72*t;ctx.fillRect(x-cw/2,y-ch/2,cw,ch);}
   ctx.globalAlpha=1;
 }
-function renderInsights(){
-  const ins=document.getElementById('insights'), taxa=Object.keys(DATA);
+async function renderInsights(){
+  const ins=document.getElementById('insights'), taxa=Object.keys(FILES);
   if(!state.insTaxa) state.insTaxa=taxa.includes('All biodiversity')?['All biodiversity']:[taxa[0]];   // comprehensive overview by default; add groups to compare across taxa
   if(!state.insGoals) state.insGoals=[0,1,2,3,4];
   const goalsOn=OBJ.map((o,i)=>i).filter(i=>state.insGoals.includes(i));
   const rowsTaxa=state.insTaxa.length?state.insTaxa:[taxa[0]];
-  let html='<div class="ihd"><b>The same place — different goals, different life groups.</b> Each map shades every B.C. cell by one goal (<b>darker = go there</b>). The hot zones shift between goals (a value choice) and between groups (different species fill different gaps). Pick the rows &amp; columns; tap any map to open it in the planner.</div>';
+  await Promise.all(rowsTaxa.map(loadGroup));   // fetch the groups we're about to draw/score
+  let html='<div class="ihd"><b>The same place — different goals, different life groups.</b> Each map shades every Canadian cell by one goal (<b>darker = go there</b>). The hot zones shift between goals (a value choice) and between groups (different species fill different gaps). Pick the rows &amp; columns; tap any map to open it in the planner.</div>';
   html+='<div class="ctrls"><div class="grp"><span class="lbl">Groups (rows)</span>'+taxa.map(t=>`<span class="chip ${state.insTaxa.includes(t)?'on':''}" role="button" tabindex="0" aria-pressed="${state.insTaxa.includes(t)}" data-tx="${t}">${TAXLBL[t]||t}</span>`).join('')+'</div>';
   html+='<div class="grp"><span class="lbl">Goals (columns)</span>'+OBJ.map((o,i)=>`<span class="chip ${state.insGoals.includes(i)?'on':''}" role="button" tabindex="0" aria-pressed="${state.insGoals.includes(i)}" data-gl="${i}">${o.name}</span>`).join('')+'</div></div>';
   html+=`<div class="matrix" style="grid-template-columns:100px repeat(${goalsOn.length},1fr)"><div></div>`;
@@ -619,7 +628,7 @@ function renderInsights(){
   html+='</div><div class="idis" id="idis"></div>';
   ins.innerHTML=html;
   ins.querySelectorAll('.cell').forEach(c=>{drawMini(c.querySelector('canvas'),DATA[c.dataset.tx],+c.dataset.gl);
-    c.onclick=()=>{const t=c.dataset.tx,gi=+c.dataset.gl;taxonSel.value=t;state.taxon=t;buildMarkers();applyWeights(OBJ.map((_,i)=>i===gi?1:0),OBJ[gi].name);setView('plan');};});
+    c.onclick=()=>{const t=c.dataset.tx,gi=+c.dataset.gl;taxonSel.value=t;state.taxon=t;loadGroup(t).then(()=>{buildMarkers();applyWeights(OBJ.map((_,i)=>i===gi?1:0),OBJ[gi].name);setView('plan');});};});
   ins.querySelectorAll('.chip[data-tx]').forEach(ch=>{ch.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();ch.click();}};ch.onclick=()=>{const t=ch.dataset.tx,i=state.insTaxa.indexOf(t);if(i>=0){if(state.insTaxa.length>1)state.insTaxa.splice(i,1);}else state.insTaxa.push(t);renderInsights();};});
   ins.querySelectorAll('.chip[data-gl]').forEach(ch=>{ch.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();ch.click();}};ch.onclick=()=>{const g=+ch.dataset.gl,i=state.insGoals.indexOf(g);if(i>=0){if(state.insGoals.length>1)state.insGoals.splice(i,1);}else state.insGoals.push(g);state.insGoals.sort((x,y)=>x-y);renderInsights();};});
   const disVals=rowsTaxa.map(t=>{const base=DATA[t].filter(r=>r[8]>0),b=base.length>=20?base:DATA[t];return {t,rho:spear(b.map(r=>r[2]),b.map(r=>r[3]))};});
@@ -653,11 +662,10 @@ document.getElementById('vexplore').onclick=()=>setView('explore');
 document.getElementById('vplan').onclick=()=>setView('plan');
 document.getElementById('vcompare').onclick=()=>setView('compare');
 
-buildMarkers();
-setView('explore');
+loadGroup(state.taxon).then(()=>{buildMarkers();setView('explore');});
 </script></body></html>"""
 
-out = (HTML.replace("__DATA__", json.dumps(DATA, separators=(",", ":")))
+out = (HTML.replace("__FILES__", json.dumps(FILES, separators=(",", ":")))
            .replace("__OBJ__", json.dumps(OBJ))
            .replace("__PRESETS__", json.dumps(PRESETS))
            .replace("__DEFAULT__", json.dumps(DEFAULT)))

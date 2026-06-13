@@ -1,0 +1,60 @@
+{
+  "groups": [
+    "Amphibia",
+    "Aves",
+    "Fungi",
+    "Insecta",
+    "Mammalia",
+    "Plantae",
+    "Reptilia",
+    "All biodiversity"
+  ],
+  "files": {
+    "Amphibia": "webapp_data_Amphibia.json",
+    "Aves": "webapp_data_Aves.json",
+    "Fungi": "webapp_data_Fungi.json",
+    "Insecta": "webapp_data_Insecta.json",
+    "Mammalia": "webapp_data_Mammalia.json",
+    "Plantae": "webapp_data_Plantae.json",
+    "Reptilia": "webapp_data_Reptilia.json",
+    "All biodiversity": "webapp_data_All_biodiversity.json"
+  },
+  "n_cells": 38242,
+  "bbox": [
+    -141.0,
+    41.0,
+    -52.0,
+    84.0
+  ],
+  "res": 0.25,
+  "row_format": [
+    "lat",
+    "lon",
+    "discover",
+    "conservation",
+    "env",
+    "staleness",
+    "urgency",
+    "travel_min",
+    "n_train"
+  ],
+  "axes_status": {
+    "discover": "REAL (inverse iNat density COG)",
+    "env": "REAL (CHELSA climate surprisal, density-weighted)",
+    "travel_min": "REAL (Weiss 2018 travel-time)",
+    "n_train": "REAL-proxy (density x cell km2)",
+    "urgency": "DEFERRED (0)",
+    "staleness": "APPROX (inverse-density proxy, no per-record dates)",
+    "conservation": "APPROX (0; no national rarity/IUCN join)"
+  },
+  "group_to_cog": {
+    "Amphibia": "Amphibia",
+    "Aves": "Aves",
+    "Insecta": "Insecta",
+    "Mammalia": "Mammalia",
+    "Plantae": "Plantae",
+    "Reptilia": "All",
+    "Fungi": "All",
+    "All biodiversity": "All"
+  }
+}
