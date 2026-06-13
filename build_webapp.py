@@ -134,7 +134,7 @@ details.adv>summary:hover{color:var(--ink)}
       <li>Each group is a <b>recent sample</b> of iNat records, not the full archive — plants & fungi are capped (~10k each), so their maps are coarser.</li>
       <li>Priority is <b>backtested</b>: holding back later-2025 sightings, higher-priority cells did turn up more new species.</li>
     </ul>
-    A planning aid, not ground truth — please obscure sensitive species and respect Indigenous data sovereignty.
+    A planning aid, not ground truth — please obscure sensitive species and respect Indigenous data sovereignty. <a href="https://blitzthegap.org" target="_blank" rel="noopener" style="color:var(--acc)">How Blitz the Gap works →</a>
   </div>
   <select id="taxon" class="full" style="margin-bottom:8px"></select>
   <div class="presets" id="presets"></div>
@@ -155,12 +155,14 @@ details.adv>summary:hover{color:var(--ink)}
   </div>
   <input type="range" id="budget" min="1" max="14" step="0.5" value="5" style="margin-top:6px">
   <div style="display:flex;gap:8px;align-items:center;margin-top:9px">
-    <span style="font-size:13.5px">Max each way</span>
+    <span style="font-size:13.5px">Max travel each way</span>
     <select id="maxleg" style="margin-left:auto">
       <option value="0" selected>No limit</option>
-      <option value="0.5">30 min</option><option value="1">1h</option>
-      <option value="1.5">1h 30</option><option value="2">2h</option>
-      <option value="3">3h</option><option value="4">4h</option><option value="6">6h</option>
+      <option value="0.25">15 min</option><option value="0.5">30 min</option>
+      <option value="1">1h</option><option value="1.5">1h 30</option>
+      <option value="2">2h</option><option value="3">3h</option>
+      <option value="4">4h</option><option value="6">6h</option>
+      <option value="8">8h</option><option value="12">12h</option>
     </select>
   </div>
   <details class="adv"><summary>More options</summary>
@@ -196,7 +198,7 @@ details.adv>summary:hover{color:var(--ink)}
   <details class="adv"><summary>How impact is scored & data sources</summary>
     <div class="legend" style="margin-top:8px"><span>skip</span><div class="bar"></div><span>go here</span></div>
     <div style="color:var(--mut);font-size:11px;line-height:1.45;margin-top:7px">Each cell's <b style="color:var(--ink)">impact 0–100</b> is your goal mix, relative to the best cell shown. Hover a cell to see which goals drive it.</div>
-    <p class="foot">Scores from real iNaturalist observations (BC), tested by holding back later sightings. Drive/cycle/walk routes from OSRM (FOSSGIS); climate from CHELSA; forest loss from Hansen GFC. Driving CO₂ ≈ 0.18 kg/km; cycling/walking zero. A planning aid — obscure sensitive-species locations and respect Indigenous data-sovereignty before any public release.</p>
+    <p class="foot"><b style="color:var(--ink)">How it works:</b> <a href="https://blitzthegap.org" target="_blank" rel="noopener" style="color:var(--acc)">Blitz the Gap</a> is a B.C.-wide bioblitz — head to a high-priority spot, record what you see on <a href="https://www.inaturalist.org" target="_blank" rel="noopener" style="color:var(--acc)">iNaturalist</a>, and your research-grade sightings flow into the <a href="https://www.inaturalist.org/projects/blitz-the-gap-2026-general" target="_blank" rel="noopener" style="color:var(--acc)">2026 project</a>, filling the map's gaps.<br><br>Scores from real iNaturalist observations (BC), tested by holding back later sightings. Drive/cycle/walk routes from OSRM (FOSSGIS); climate from CHELSA; forest loss from Hansen GFC. Driving CO₂ ≈ 0.18 kg/km; cycling/walking zero. A planning aid — obscure sensitive-species locations and respect Indigenous data-sovereignty before any public release.</p>
   </details>
 </div>
 <div id="map"></div>
@@ -237,7 +239,7 @@ async function fetchProspects(lat,lon,where){
     pr.innerHTML=`<div class="hd">🔭 <b style="color:var(--ink)">${where||'Here'}</b> · ${total.toLocaleString()} species recorded. Keep an eye out for${nearby?' (✦ = nearby)':''}:</div>`+
       '<div class="prospects">'+res.map(r=>{const t=r.taxon,g=t.observations_count||0,rare=g<1500,unc=g<7000;
         return `<a class="sp" href="https://www.inaturalist.org/taxa/${t.id}" target="_blank" rel="noopener" title="${t.name}"><img src="${t.default_photo.square_url}" loading="lazy" alt=""><div class="nm">${r._here?'':'✦ '}${t.preferred_common_name||t.name}${rare?' <span class="rare">rare</span>':(unc?' <span class="unc">uncommon</span>':'')}</div><div class="ct">${r._here?r.count+' here':'nearby'} · ${g.toLocaleString()} worldwide</div></a>`;}).join('')+'</div>'+
-      `<div style="margin-top:7px;font-size:11.5px"><a href="${ex}" target="_blank" rel="noopener" style="color:var(--acc)">Explore all on iNaturalist →</a> &nbsp;·&nbsp; <a href="https://www.inaturalist.org/observations/new" target="_blank" rel="noopener" style="color:var(--gd)">＋ Log a sighting</a></div>`;
+      `<div style="margin-top:7px;font-size:11.5px"><a href="${ex}" target="_blank" rel="noopener" style="color:var(--acc)">Explore all on iNaturalist →</a> &nbsp;·&nbsp; <a href="https://www.inaturalist.org/observations/new" target="_blank" rel="noopener" style="color:var(--gd)">＋ Log a sighting</a> &nbsp;·&nbsp; <a href="https://www.inaturalist.org/projects/blitz-the-gap-2026-general" target="_blank" rel="noopener" style="color:var(--mut)">for Blitz the Gap</a></div>`;
     if(where==='Your destination' && destMarker && destMarker.getPopup()){
       const thumbs='<div style="font-size:11px;color:#557;margin:9px 0 4px">Recorded in this area — tap a photo for details:</div><div style="display:flex;gap:6px">'+res.slice(0,4).map(r=>{const t=r.taxon,nm=t.preferred_common_name||t.name;return `<a href="https://www.inaturalist.org/taxa/${t.id}" target="_blank" rel="noopener" style="width:62px;text-decoration:none;color:#0a2a44" title="${t.name} — open on iNaturalist"><img src="${t.default_photo.square_url}" style="width:62px;height:62px;object-fit:cover;border-radius:7px;border:1px solid #cdd;display:block"><div style="font-size:10px;line-height:1.15;margin-top:3px;height:24px;overflow:hidden">${nm}</div></a>`;}).join('')+'</div>';
       destMarker.setPopupContent(destMarker.getPopup().getContent()+thumbs); destMarker.openPopup();
