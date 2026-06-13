@@ -1004,7 +1004,7 @@ function spear(a,b){const ra=rankArr(a),rb=rankArr(b),n=a.length;let ma=(n-1)/2,
 const BB={minlon:-141,maxlon:-52,minlat:41,maxlat:84};
 function drawMini(cv,rows,gi){
   const ctx=cv.getContext('2d'),W=cv.width,H=cv.height;ctx.clearRect(0,0,W,H);
-  const vals=rows.map(r=>r[2+gi]),lo=Math.min(...vals),hi=Math.max(...vals),rng=(hi-lo)||1;
+  const vals=rows.map(r=>r[2+gi]);let lo=Infinity,hi=-Infinity;for(const v of vals){if(v<lo)lo=v;if(v>hi)hi=v;}const rng=(hi-lo)||1;
   const cw=W/((BB.maxlon-BB.minlon)/0.25)+0.6,ch=H/((BB.maxlat-BB.minlat)/0.25)+0.6;
   for(const r of rows){const t=(r[2+gi]-lo)/rng;
     const x=(r[1]-BB.minlon)/(BB.maxlon-BB.minlon)*W,y=(1-(r[0]-BB.minlat)/(BB.maxlat-BB.minlat))*H;
@@ -1023,18 +1023,18 @@ async function renderInsights(){
   html+='<div class="grp"><span class="lbl">'+t('ins_goals')+'</span>'+OBJ.map((o,i)=>`<span class="chip ${state.insGoals.includes(i)?'on':''}" role="button" tabindex="0" aria-pressed="${state.insGoals.includes(i)}" data-gl="${i}">${objName(i)}</span>`).join('')+'</div></div>';
   html+=`<div class="matrix" style="grid-template-columns:100px repeat(${goalsOn.length},1fr)"><div></div>`;
   goalsOn.forEach(gi=>html+=`<div class="gh">${objName(gi)}<span class="gq">${objQ(gi)}</span></div>`);
-  rowsTaxa.forEach(tx=>{html+=`<div class="rl">${groupName(tx)}</div>`;goalsOn.forEach(gi=>html+=`<div class="cell" tabindex="0" role="button" aria-label="${groupName(tx)}, ${objName(gi)}" data-tx="${tx}" data-gl="${gi}"><canvas width="220" height="170"></canvas></div>`);});
+  rowsTaxa.forEach(tx=>{html+=`<div class="rl">${groupName(tx)}</div>`;goalsOn.forEach(gi=>html+=`<div class="cell" tabindex="0" role="button" aria-label="${groupName(tx)}, ${objName(gi)}" data-tx="${tx}" data-gl="${gi}"><canvas width="220" height="170" role="img" aria-label="${groupName(tx)}, ${objName(gi)} priority map"></canvas></div>`);});
   html+='</div><div class="idis" id="idis"></div>';
   ins.innerHTML=html;
   ins.querySelectorAll('.cell').forEach(c=>{drawMini(c.querySelector('canvas'),DATA[c.dataset.tx],+c.dataset.gl);
     c.onclick=()=>{const tx=c.dataset.tx,gi=+c.dataset.gl;taxonSel.value=tx;state.taxon=tx;loadGroup(tx).then(()=>{buildMarkers();applyWeights(OBJ.map((_,i)=>i===gi?1:0),objName(gi));setView('plan');});};c.onkeydown=ev=>{if(ev.key==='Enter'||ev.key===' '){ev.preventDefault();c.click();}};});
   ins.querySelectorAll('.chip[data-tx]').forEach(ch=>{ch.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();ch.click();}};ch.onclick=()=>{const t=ch.dataset.tx,i=state.insTaxa.indexOf(t);if(i>=0){if(state.insTaxa.length>1)state.insTaxa.splice(i,1);}else state.insTaxa.push(t);renderInsights();};});
   ins.querySelectorAll('.chip[data-gl]').forEach(ch=>{ch.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();ch.click();}};ch.onclick=()=>{const g=+ch.dataset.gl,i=state.insGoals.indexOf(g);if(i>=0){if(state.insGoals.length>1)state.insGoals.splice(i,1);}else state.insGoals.push(g);state.insGoals.sort((x,y)=>x-y);renderInsights();};});
+  if(!state.insGoals.includes(0)||!state.insGoals.includes(1)){document.getElementById('idis').innerHTML='';return;}   // verdict names Discover & rare-species; show only when both are in the matrix
   // If the conservation axis is degenerate (constant -- e.g. the national placeholder is 0
   // everywhere), Spearman is undefined and would falsely read as "they agree". Say so honestly.
-  const consVaries=rowsTaxa.some(tx=>{const base=DATA[tx].filter(r=>r[8]>0),b=base.length>=20?base:DATA[tx];let mn=1e9,mx=-1e9;for(const r of b){if(r[3]<mn)mn=r[3];if(r[3]>mx)mx=r[3];}return mx>mn;});
-  if(!consVaries){document.getElementById('idis').innerHTML=t('ins_onhold');return;}
-  const disVals=rowsTaxa.map(tx=>{const base=DATA[tx].filter(r=>r[8]>0),b=base.length>=20?base:DATA[tx];return {tx,rho:spear(b.map(r=>r[2]),b.map(r=>r[3]))};});
+  const disVals=rowsTaxa.map(tx=>{const base=DATA[tx].filter(r=>r[8]>0),b=base.length>=20?base:DATA[tx];let mn=1e9,mx=-1e9;for(const r of b){if(r[3]<mn)mn=r[3];if(r[3]>mx)mx=r[3];}return mx>mn?{tx,rho:spear(b.map(r=>r[2]),b.map(r=>r[3]))}:null;}).filter(Boolean);
+  if(!disVals.length){document.getElementById('idis').innerHTML=t('ins_onhold');return;}
   const dis=disVals.map(d=>`${groupName(d.tx)} <b>${d.rho.toFixed(2)}</b>`).join(' · ');
   const neg=disVals.filter(d=>d.rho<0).length, n=disVals.length;   // verdict follows the actual signs, not a hardcoded claim
   const verdict = neg===n ? t('ins_v_all_diff') : neg===0 ? t('ins_v_agree') : t('ins_v_some',neg,n);
