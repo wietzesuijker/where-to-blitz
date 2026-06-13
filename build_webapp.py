@@ -329,10 +329,11 @@ const I18N={
     prospects_lookup:"🔭 Looking up what lives here…",
     prospects_none:"🔭 No research-grade records here yet — you could be the first to document what lives here.",
     prospects_err:"🔭 Couldn’t load species for this spot.",
-    prospects_hd:(where,n,nearby)=>`🔭 <b style="color:var(--ink)">${where}</b> · ${n} species recorded. Keep an eye out for${nearby?' (✦ = nearby)':''}:`,
+    prospects_hd:(where,n,nearby)=>`🔭 <b style="color:var(--ink)">${where}</b> · ${n} species recorded on iNaturalist. Worth looking for${nearby?' (✦ = nearby)':''}:`,
     rare:"rare", uncommon:"uncommon", gap:"gap",
     here_count:n=>`${n} here`, nearby_lbl:"nearby",
-    worldwide:n=>`${n} worldwide`,
+    inat_caveat:"Counts are iNaturalist observations — what people have logged, not a complete species census.",
+    worldwide:n=>`${n} on iNaturalist`,
     explore_all:"Explore all on iNaturalist →", log_sighting:"＋ Log a sighting", for_challenge:"for this challenge",
     fill_gap_surveyed:`🎯 <b style="color:var(--ink)">Fill the gap</b> — common nearby, missing from this well-recorded cell:`,
     fill_gap_under:`🎯 <b style="color:var(--ink)">Undersampled here</b> — barely recorded; any of these (common nearby) helps:`,
@@ -435,10 +436,11 @@ const I18N={
     prospects_lookup:"🔭 Recherche de ce qui vit ici…",
     prospects_none:"🔭 Aucune observation de qualité recherche ici pour l'instant — vous pourriez être la première personne à documenter ce qui vit ici.",
     prospects_err:"🔭 Impossible de charger les espèces pour cet endroit.",
-    prospects_hd:(where,n,nearby)=>`🔭 <b style="color:var(--ink)">${where}</b> · ${n} espèces observées. À surveiller${nearby?' (✦ = à proximité)':''} :`,
+    prospects_hd:(where,n,nearby)=>`🔭 <b style="color:var(--ink)">${where}</b> · ${n} espèces observées sur iNaturalist. À surveiller${nearby?' (✦ = à proximité)':''} :`,
     rare:"rare", uncommon:"peu commun", gap:"lacune",
     here_count:n=>`${n} ici`, nearby_lbl:"à proximité",
-    worldwide:n=>`${n} dans le monde`,
+    inat_caveat:"Les nombres sont des observations iNaturalist — ce qui a été noté, pas un inventaire complet des espèces.",
+    worldwide:n=>`${n} sur iNaturalist`,
     explore_all:"Tout explorer sur iNaturalist →", log_sighting:"＋ Noter une observation", for_challenge:"pour ce défi",
     fill_gap_surveyed:`🎯 <b style="color:var(--ink)">Combler la lacune</b> — commun à proximité, absent de cette cellule bien documentée :`,
     fill_gap_under:`🎯 <b style="color:var(--ink)">Sous-échantillonné ici</b> — peu documenté; chacune de celles-ci (commune à proximité) aide :`,
@@ -564,6 +566,7 @@ async function fetchProspects(lat,lon,whereKey){
     pr.innerHTML=`<div class="hd">${t('prospects_hd','<b style="color:var(--ink)">'+(where||t('here'))+'</b>',total.toLocaleString(LANG==='fr'?'fr-CA':'en-CA'),nearby)}</div>`+
       '<div class="prospects">'+res.map(r=>{const tx=r.taxon,g=tx.observations_count||0,rare=g<1500,unc=g<7000;
         return `<a class="sp" href="https://www.inaturalist.org/taxa/${tx.id}" target="_blank" rel="noopener" title="${tx.name}"><img src="${tx.default_photo.square_url}" loading="lazy" alt=""><div class="nm">${r._here?'':'✦ '}${tx.preferred_common_name||tx.name}${rare?` <span class="rare">${L_rare}</span>`:(unc?` <span class="unc">${L_unc}</span>`:'')}</div><div class="ct">${r._here?T_here(r.count):L_nearby} · ${T_world(g)}</div></a>`;}).join('')+'</div>'+'<div id="firsts"></div>'+
+      `<div style="margin-top:8px;font-size:10.5px;color:var(--mut);line-height:1.35">${t('inat_caveat')}</div>`+
       `<div style="margin-top:7px;font-size:11.5px"><a href="${ex}" target="_blank" rel="noopener" style="color:var(--acc)">${t('explore_all')}</a> &nbsp;·&nbsp; <a href="https://www.inaturalist.org/observations/new" target="_blank" rel="noopener" style="color:var(--gd)">${t('log_sighting')}</a> &nbsp;·&nbsp; <a href="https://www.inaturalist.org/projects/${state.project}" target="_blank" rel="noopener" style="color:var(--mut)">${t('for_challenge')}</a></div>`;
     // "Fill the gap": species common in the ~50 km neighbourhood but missing from THIS cell's
     // research-grade records (cell query widened to 500 to keep the absence honest). Framed as
