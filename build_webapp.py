@@ -139,7 +139,8 @@ details.adv>summary:hover{color:var(--ink)}
     <ul>
       <li><b>“All biodiversity”</b> averages 7 life groups (amphibians, birds, fungi, insects, mammals, plants, reptiles).</li>
       <li>Each group is a <b>recent sample</b> of iNat records, not the full archive — plants & fungi are capped (~10k each), so their maps are coarser.</li>
-      <li>Priority is <b>backtested</b>: holding back later-2025 sightings, higher-priority cells did turn up more new species.</li>
+      <li>Priority is <b>backtested</b>: holding back later-2025 sightings, higher-priority cells tended to turn up more new species.</li>
+      <li>At-risk &amp; location-obscured species are <b>left out of suggestions</b> — we don't point people at them.</li>
     </ul>
     A planning aid, not ground truth — please obscure sensitive species and respect Indigenous data sovereignty. <a href="https://blitzthegap.org" target="_blank" rel="noopener" style="color:var(--acc)">How Blitz the Gap works →</a>
   </div>
@@ -233,7 +234,7 @@ async function fetchProspects(lat,lon,where){
   const myseq=++prospectSeq;
   const pr=document.getElementById('prospects'); pr.innerHTML='<div class="hd">🔭 Looking up what lives here…</div>';
   const ic=ICONIC[state.taxon]||'', HH=0.125;
-  const q=(h)=>`https://api.inaturalist.org/v1/observations/species_counts?swlat=${lat-h}&nelat=${lat+h}&swlng=${lon-h}&nelng=${lon+h}&quality_grade=research&per_page=500&order_by=count`+(ic?`&iconic_taxa=${ic}`:'');
+  const q=(h)=>`https://api.inaturalist.org/v1/observations/species_counts?swlat=${lat-h}&nelat=${lat+h}&swlng=${lon-h}&nelng=${lon+h}&quality_grade=research&taxon_geoprivacy=open&per_page=500&order_by=count`+(ic?`&iconic_taxa=${ic}`:'');
   try{
     const j=await fetch(q(HH)).then(r=>r.json());
     const total=j.total_results||0;
@@ -274,9 +275,9 @@ async function fetchProspects(lat,lon,where){
 }
 async function fetchFirsts(lat,lon,ic,cellIds){
   const R=0.5;   // ~50 km neighbourhood -- same habitat zone, not a different ecoregion
-  const u=`https://api.inaturalist.org/v1/observations/species_counts?swlat=${lat-R}&nelat=${lat+R}&swlng=${lon-R}&nelng=${lon+R}&quality_grade=research&per_page=200&order_by=count`+(ic?`&iconic_taxa=${ic}`:'');
+  const u=`https://api.inaturalist.org/v1/observations/species_counts?swlat=${lat-R}&nelat=${lat+R}&swlng=${lon-R}&nelng=${lon+R}&quality_grade=research&taxon_geoprivacy=open&threatened=false&per_page=200&order_by=count`+(ic?`&iconic_taxa=${ic}`:'');
   try{const j=await fetch(u).then(r=>r.json());
-    return (j.results||[]).filter(r=>r.taxon&&r.taxon.default_photo&&!cellIds.has(r.taxon.id)&&(r.taxon.observations_count||0)>40).slice(0,6);
+    return (j.results||[]).filter(r=>r.taxon&&r.taxon.default_photo&&!cellIds.has(r.taxon.id)&&r.count>=10&&(r.taxon.observations_count||0)>40).slice(0,6);
   }catch(e){return [];}
 }
 const showProspects=debounce((lat,lon)=>fetchProspects(lat,lon,'Around your start'),500);
@@ -419,13 +420,13 @@ const doSearch=debounce(async q=>{
     const u=`https://nominatim.openstreetmap.org/search?format=jsonv2&limit=6&countrycodes=ca&viewbox=-139,60,-114,48&q=${encodeURIComponent(q)}`;
     const r=await fetch(u,{headers:{'Accept-Language':'en'}}).then(r=>r.json());
     if(psEl.value.trim()!==q.trim())return;                       // stale
-    if(!r.length){srEl.innerHTML='<div class="res" style="color:var(--mut);cursor:default">No places found</div>';srEl.classList.add('open');return;}
-    srEl.innerHTML=r.map(p=>{const parts=p.display_name.split(', '),head=parts[0],sub=parts.slice(1,4).join(', ');
-      return `<div class="res" data-lat="${p.lat}" data-lon="${p.lon}" data-nm="${head.replace(/"/g,'&quot;')}"><b>${head}</b><div class="sub">${sub}</div></div>`;}).join('');
+    if(!r.length){const d=document.createElement('div');d.className='res';d.style.cssText='color:var(--mut);cursor:default';d.textContent='No places found';srEl.replaceChildren(d);srEl.classList.add('open');return;}
+    srEl.replaceChildren(...r.map(p=>{const parts=p.display_name.split(', '),head=parts[0],sub=parts.slice(1,4).join(', ');
+      const d=document.createElement('div');d.className='res';d.dataset.lat=p.lat;d.dataset.lon=p.lon;
+      const b=document.createElement('b');b.textContent=head;const sb=document.createElement('div');sb.className='sub';sb.textContent=sub;d.append(b,sb);
+      d.onclick=()=>{map.setView([+p.lat,+p.lon],10);setStart(+p.lat,+p.lon,head);psEl.value=head;closeResults();};
+      return d;}));
     srEl.classList.add('open');
-    srEl.querySelectorAll('.res[data-lat]').forEach(el=>el.onclick=()=>{
-      const lat=+el.dataset.lat, lon=+el.dataset.lon;
-      map.setView([lat,lon],10); setStart(lat,lon,el.dataset.nm); psEl.value=el.dataset.nm; closeResults();});
   }catch(e){closeResults();}
 },450);
 psEl.addEventListener('input',e=>doSearch(e.target.value));
