@@ -294,7 +294,8 @@ const I18N={
     legend_hint:`Darker = higher priority. <span id="legendtap">Tap a cell to see what to record.</span>`,
     // dynamic
     legendtap_explore:"Tap a cell to see what to record.",
-    legendtap_plan:"Tap the map to set your start.",
+    legendtap_plan_start:"Tap the map to set your start.",
+    legendtap_plan_dest:"Tap the map to choose your destination.",
     near:"near", here:"here", my_loc_short:"my location", my_area_ip:"my area (from IP)",
     locating:"locating…", loc_unavail:"location unavailable — try the search above",
     cells_loading:t=>`🔭 Loading ${t}…`,
@@ -406,7 +407,8 @@ const I18N={
     legend_hint:`Plus foncé = priorité plus élevée. <span id="legendtap">Touchez une cellule pour voir quoi observer.</span>`,
     // dynamic
     legendtap_explore:"Touchez une cellule pour voir quoi observer.",
-    legendtap_plan:"Touchez la carte pour définir votre départ.",
+    legendtap_plan_start:"Touchez la carte pour définir votre départ.",
+    legendtap_plan_dest:"Touchez la carte pour choisir votre destination.",
     near:"près de", here:"ici", my_loc_short:"ma position", my_area_ip:"ma région (selon l'IP)",
     locating:"localisation…", loc_unavail:"position indisponible — utilisez la recherche ci-dessus",
     cells_loading:t=>`🔭 Chargement de ${t}…`,
@@ -494,7 +496,7 @@ function relabelDynamic(){
   // budget label unit suffix
   if(typeof refreshBudget==='function')refreshBudget();
   // legend "tap" hint follows current view
-  const lt=document.getElementById('legendtap');if(lt)lt.textContent=t(state&&state.view==='plan'?'legendtap_plan':'legendtap_explore');
+  const lt=document.getElementById('legendtap');if(lt)lt.textContent=t(legendTapKey());
   // re-render Getting Even categorical legend in the new language (no-op when inactive)
   if(typeof updateLegend==='function'&&typeof geActive==='function'&&geActive())updateLegend();
   // start-place prospects idle text (only if untouched)
@@ -637,23 +639,28 @@ function setBase(name){
 }
 setBase('Light & muted');
 
-let markers=[], routeLine=null, destMarker=null, destCell=null, lastFit=null, lastScored=null, planned=false;
+let markers=[], routeLine=null, destMarker=null, destCell=null, lastFit=null, lastScored=null, planned=false, lastDest=null;
 const VAN=[49.28,-123.12];
 const w0={}; OBJ.forEach((o,i)=>w0[o.key]=DEFAULT[i]);
-const state={taxon:(FILES["All biodiversity"]?"All biodiversity":Object.keys(FILES)[0]), w:w0, start:VAN.slice(), budget:5, maxLeg:0, minRatio:0.5, unit:'Hours', lowc:false, mode:'Drive', startProsp:false, view:'explore', project:'blitz-the-gap-2026-general'};
+const state={taxon:(FILES["All biodiversity"]?"All biodiversity":Object.keys(FILES)[0]), w:w0, start:VAN.slice(), budget:5, maxLeg:0, minRatio:0.5, unit:'Hours', lowc:false, mode:'Drive', startProsp:false, view:'explore', startSet:false, planMode:'auto', project:'blitz-the-gap-2026-general'};
 function debounce(fn,ms){let t;return(...a)=>{clearTimeout(t);t=setTimeout(()=>fn(...a),ms);};}
-const replan=debounce(()=>{if(planned)planTrip();},650);
+const replan=debounce(()=>{if(!planned)return;if(state.planMode==='dest'&&lastDest)setDest(lastDest[0],lastDest[1]);else planTrip();},650);
 
 const startIcon=L.divIcon({className:'',iconSize:[20,20],iconAnchor:[10,10],html:'<div style="width:18px;height:18px;border-radius:50%;background:#1f6fe0;border:3px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.45)"></div>'});
 const destIcon=L.divIcon({className:'',iconSize:[26,38],iconAnchor:[13,36],html:'<svg width="26" height="38" viewBox="0 0 26 38"><path d="M13 0C6 0 0 6 0 13c0 9 13 25 13 25s13-16 13-25C26 6 20 0 13 0z" fill="#f0a000" stroke="#fff" stroke-width="2"/><circle cx="13" cy="13" r="5" fill="#fff"/></svg>'});
 const startMarker=L.marker(state.start,{draggable:true,icon:startIcon,zIndexOffset:1000}).addTo(map).bindTooltip("Start — drag me, or tap the map");
 startMarker.on('drag',()=>{const ll=startMarker.getLatLng();state.start=[ll.lat,ll.lng];});
 startMarker.on('dragend',()=>{const ll=startMarker.getLatLng();setStart(ll.lat,ll.lng);});
-map.on('click',e=>{state.view==='explore'?exploreCell(e.latlng.lat,e.latlng.lng):setStart(e.latlng.lat,e.latlng.lng);});
+map.on('click',e=>{state.view==='explore'?exploreCell(e.latlng.lat,e.latlng.lng):planTap(e.latlng.lat,e.latlng.lng);});
 function setStartLabel(s){document.getElementById('startlbl').textContent=s;}
-function setStart(lat,lon,tag){state.start=[lat,lon];startMarker.setLatLng([lat,lon]);
+function setStart(lat,lon,tag){state.start=[lat,lon];startMarker.setLatLng([lat,lon]);state.startSet=true;refreshTapHint();
   setStartLabel((tag?tag+' · ':'')+lat.toFixed(3)+', '+lon.toFixed(3));
   geocode(lat,lon,tag); if(state.startProsp) showProspects(lat,lon); replan();}
+// In Plan view the first interaction sets the start (your location is less flexible);
+// once a start exists, every map tap re-picks the destination (the travel target is fully flexible).
+function planTap(lat,lon){state.startSet?setDest(lat,lon):setStart(lat,lon);}
+function legendTapKey(){if(state&&state.view==='plan')return state.startSet?'legendtap_plan_dest':'legendtap_plan_start';return 'legendtap_explore';}
+function refreshTapHint(){const lt=document.getElementById('legendtap');if(lt)lt.textContent=t(legendTapKey());}
 const geocode=debounce((lat,lon,tag)=>{
   fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=10&lat=${lat}&lon=${lon}`)
     .then(r=>r.json()).then(j=>{const a=j.address||{};const nm=a.city||a.town||a.village||a.hamlet||a.county||a.state||((j.display_name||'').split(',')[0])||t('here');
@@ -672,7 +679,7 @@ function buildMarkers(){
   if(markers.length===rs.length){markers.forEach((m,i)=>m.r=rs[i]);recolour();return;}
   markers.forEach(m=>map.removeLayer(m.mk));markers=[];
   for(const r of rs){const mk=L.rectangle([[r[0]-HALF,r[1]-HALF],[r[0]+HALF,r[1]+HALF]],{stroke:true,weight:1,fillOpacity:.5});
-    mk.on('click',e=>{state.view==='explore'?exploreCell(r[0],r[1]):setStart(e.latlng.lat,e.latlng.lng);});   // r[0],r[1] are invariant across taxa
+    mk.on('click',e=>{state.view==='explore'?exploreCell(r[0],r[1]):planTap(r[0],r[1]);});   // r[0],r[1] are invariant across taxa
     mk.addTo(map);markers.push({mk,r});}
   recolour();
 }
@@ -681,7 +688,7 @@ function renderCellTable(){
   const top=markers.map(m=>({r:m.r,t:m.t||0})).sort((a,b)=>b.t-a.t).slice(0,40);
   el.innerHTML='<table><caption>'+t('table_caption')+'</caption><thead><tr><th scope="col">'+t('table_rank')+'</th><th scope="col">'+t('table_latlon')+'</th><th scope="col">'+t('table_score')+'</th></tr></thead><tbody>'+
     top.map((o,i)=>`<tr tabindex="0" role="button" data-la="${o.r[0]}" data-lo="${o.r[1]}" aria-label="Rank ${i+1}: latitude ${o.r[0].toFixed(2)}, longitude ${o.r[1].toFixed(2)}, score ${(o.t*100|0)} of 100"><td>${i+1}</td><td>${o.r[0].toFixed(2)}, ${o.r[1].toFixed(2)}</td><td>${(o.t*100|0)}/100</td></tr>`).join('')+'</tbody></table>';
-  el.querySelectorAll('tr[data-la]').forEach(tr=>{const go=()=>{const la=+tr.dataset.la,lo=+tr.dataset.lo;map.setView([la,lo],9);state.view==='plan'?setStart(la,lo):exploreCell(la,lo);};tr.onclick=go;tr.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}};});
+  el.querySelectorAll('tr[data-la]').forEach(tr=>{const go=()=>{const la=+tr.dataset.la,lo=+tr.dataset.lo;map.setView([la,lo],9);state.view==='plan'?planTap(la,lo):exploreCell(la,lo);};tr.onclick=go;tr.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}};});
 }
 function recolour(){
   const cov=document.getElementById('tgCoverage')&&document.getElementById('tgCoverage').checked;
@@ -714,7 +721,7 @@ function updateLegend(){
       t('ge_cats').map((nm,i)=>sw(GE_PAL[i],nm)).join('')+sw(GE_ALL,t('ge_all'));
   }else{
     ml.innerHTML=GE_PRIORITY_LEGEND;
-    const lt=document.getElementById('legendtap');if(lt)lt.textContent=t(state&&state.view==='plan'?'legendtap_plan':'legendtap_explore');
+    const lt=document.getElementById('legendtap');if(lt)lt.textContent=t(legendTapKey());
   }
 }
 
@@ -816,7 +823,7 @@ function ipLoc(ok){fetch('https://ipapi.co/json/').then(r=>r.json()).then(j=>{if
 // the trip planner
 document.getElementById('plan').onclick=async()=>{await planTrip();const t=document.getElementById('trips');if(t)t.scrollIntoView({behavior:'smooth',block:'start'});};
 async function planTrip(){
-  planned=true;
+  planned=true;state.planMode='auto';
   const trips=document.getElementById('trips');const [slat,slon]=state.start,budget=state.budget,M=MODES[state.mode];
   const all=markers.map(m=>{const km=haversine(slat,slon,m.r[0],m.r[1]);return {m,km,estOne:(km*ROAD_FACTOR)/M.kmh,imp:impact(m.r)};});
   // Pick candidates BEFORE we know routability, so blend two signals: the highest-impact
@@ -845,6 +852,24 @@ async function planTrip(){
   const here={...here0,oneH:0,oneKm:0,geo:null,real:true,fieldH:budget,co2:0,here:true};
   lastFit=[here,...fit];lastScored=scored.filter(o=>o.oneH<=cap);
   rankAndRender();
+}
+// Route to a destination the user tapped (vs planTrip, which auto-suggests the best gaps).
+// Snaps to the gap cell under the tap, routes from the (fixed) start, and shows it.
+async function setDest(lat,lon){
+  planned=true;state.planMode='dest';lastDest=[lat,lon];
+  let best=markers[0],bd=1e9;for(const m of markers){const d=Math.abs(m.r[0]-lat)+Math.abs(m.r[1]-lon);if(d<bd){bd=d;best=m;}}
+  if(!best)return;
+  const [slat,slon]=state.start,budget=state.budget,M=MODES[state.mode];
+  const km=haversine(slat,slon,best.r[0],best.r[1]);
+  const trips=document.getElementById('trips');
+  if(trips)trips.innerHTML='<div class="hd">'+t('finding_routes',modeName(state.mode).toLowerCase())+'</div>';
+  let oneH=(km*ROAD_FACTOR)/M.kmh,oneKm=km*ROAD_FACTOR,geo=null,real=false;
+  try{const u=`${OSRM_BASE}${M.host}/route/v1/driving/${slon},${slat};${best.r[1]},${best.r[0]}?overview=full&geometries=geojson`;
+    const j=await fetch(u).then(r=>r.json());
+    if(j.code==='Ok'&&j.routes&&j.routes[0]){const rt=j.routes[0];oneH=rt.duration/3600;oneKm=rt.distance/1000;geo=rt.geometry;real=true;}}catch(e){}
+  const o={m:best,km,imp:impact(best.r),oneH,oneKm,geo,real,fieldH:budget-2*oneH,co2:2*oneKm*M.emit};
+  if(trips){trips.innerHTML='<div class="hd">'+t('pop_go_title2')+'</div>';tripRow(trips,o,'d',0);}
+  selectTrip(o);
 }
 function tripRow(trips,o,id,num){
   o.id='t'+id;const div=document.createElement('div');div.className='row';div.dataset.id=o.id;
@@ -971,7 +996,7 @@ function setView(v){
   state.view=v;
   document.getElementById('insights').style.display=v==='compare'?'block':'none';
   const ml=document.getElementById('maplegend');if(ml)ml.style.display=v==='compare'?'none':'block';
-  const lt=document.getElementById('legendtap');if(lt)lt.textContent=t(v==='plan'?'legendtap_plan':'legendtap_explore');
+  const lt=document.getElementById('legendtap');if(lt)lt.textContent=t(legendTapKey());
   document.getElementById('tripui').style.display=v==='plan'?'':'none';
   document.getElementById('vexplore').classList.toggle('on',v==='explore');
   document.getElementById('vplan').classList.toggle('on',v==='plan');
