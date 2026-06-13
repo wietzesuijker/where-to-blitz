@@ -25,7 +25,7 @@
     "Arachnida": "webapp_data_Arachnida.json",
     "Mollusca": "webapp_data_Mollusca.json"
   },
-  "n_cells": 32643,
+  "n_cells": 31804,
   "bbox": [
     -141.0,
     41.0,
@@ -45,25 +45,27 @@
     "n_train"
   ],
   "axes_status": {
-    "discover": "REAL (inverse iNat density COG)",
+    "discover": "REAL \u2014 under-sampling rank from iNat density (zero-obs ties broken by climate distinctiveness)",
     "env": "REAL (CHELSA climate surprisal, density-weighted)",
     "travel_min": "REAL (Weiss 2018 travel-time)",
     "n_train": "REAL-proxy (density x cell km2)",
     "urgency": "REAL (Hansen loss fraction)",
-    "staleness": "APPROX (inverse-density proxy, no per-record dates)",
+    "staleness": "PROXY = discover (no national per-record dates)",
     "conservation": "APPROX (0; no national rarity/IUCN join)"
   },
   "group_to_cog": {
     "Amphibia": "Amphibia",
     "Aves": "Aves",
+    "Fungi": "Fungi",
     "Insecta": "Insecta",
     "Mammalia": "Mammalia",
     "Plantae": "Plantae",
-    "Reptilia": "All",
-    "Fungi": "All",
-    "All biodiversity": "All"
+    "Reptilia": "Reptilia",
+    "Actinopterygii": "Actinopterygii",
+    "Arachnida": "Arachnida",
+    "Mollusca": "Mollusca"
   },
-  "land_mask": "Natural Earth 50m admin_0; kept Canada + United States land; dropped ocean (Hudson/Baffin Bay) + Greenland",
+  "land_mask": "Natural Earth 50m admin_0 (Canada+US land) AND iNat density COG data-footprint (dropped -9999 no-data cells, ~deep-US outside the Canadian COG)",
   "discover_method": "under-sampling rank (fewer obs=higher); zero-obs ties broken by climate distinctiveness (env). Replaces saturating norm(1/density).",
   "staleness_method": "proxy = de-saturated discover (no national per-record dates); down-weighted in national presets",
   "real_groups": "Amphibia,Aves,Actinopterygii,Arachnida,Fungi,Insecta,Mammalia,Mollusca,Plantae,Reptilia (all real per-taxon iNat density COGs; Fungi+Reptilia no longer All-proxy)",

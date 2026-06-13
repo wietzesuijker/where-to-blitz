@@ -6,7 +6,7 @@ start point + flexible time budget (minutes / hours / days); real driving routes
 option. Answers "from here, with this much time, where do I maximise my impact?"."""
 import json
 
-# Canada-wide: fetch per-group at runtime (38k cells x 8 groups is too big to inline).
+# Canada-wide: fetch per-group at runtime (national grid fetched per-group at runtime is too big to inline).
 # Inject only the group->filename map; the browser fetches each group's JSON on demand.
 CA_INDEX = json.load(open("cluster_results/ca/index.json"))
 FILES = CA_INDEX["files"]
@@ -701,7 +701,7 @@ const HALF=0.125;   // half a 0.25-deg cell
 function buildMarkers(){
   const rs=rows();
   // The 0.25° grid geometry is identical across taxa, so after the first build a taxon
-  // switch only swaps each cell's data row + restyles -- no 3478-rectangle teardown/rebuild.
+  // switch only swaps each cell's data row + restyles -- no full rectangle teardown/rebuild.
   if(markers.length===rs.length){markers.forEach((m,i)=>m.r=rs[i]);recolour();return;}
   markers.forEach(m=>map.removeLayer(m.mk));markers=[];
   for(const r of rs){const mk=L.rectangle([[r[0]-HALF,r[1]-HALF],[r[0]+HALF,r[1]+HALF]],{stroke:true,weight:1,fillOpacity:.5});
@@ -730,7 +730,7 @@ function recolour(){
   // If the chosen goal mix has no spatial signal (e.g. only a degenerate/placeholder axis like
   // national conservation=0), rank would paint a fake index gradient -- show a flat map instead.
   const flat=ord.length>0&&(ord[ord.length-1][0]-ord[0][0])<1e-9;   // guard empty markers (recolour runs during init before data loads)
-  // No per-cell tooltip: at ~38k cells binding one tooltip each tanks pan/zoom.
+  // No per-cell tooltip: at tens of thousands of cells binding one tooltip each tanks pan/zoom.
   // Cells stay clickable -- the click popup already shows the cell's score & drivers.
   // stroke matches fill (same colour+opacity) so adjacent canvas rectangles tile seamlessly -- without it, anti-alias gaps stripe the map at low zoom (worse for narrow high-latitude cells)
   markers.forEach((m,i)=>{const t=flat?0:rank[i]/n1;m.t=t;const o=cov?0:0.25+0.5*t,c=colour(t);m.mk.setStyle({fillColor:c,color:c,weight:1,opacity:o,fillOpacity:o});});
