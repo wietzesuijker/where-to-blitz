@@ -148,18 +148,18 @@ details.adv>summary:hover{color:var(--ink)}
   <div class="presets" id="presets"></div>
   <details class="adv"><summary>Fine-tune the five goals</summary><div id="objs"></div></details>
 
+  <div id="tripui">
   <div class="sec">Your trip</div>
-  <div style="font-size:13px">Start: <b id="startlbl">Vancouver</b></div>
-  <div class="startrow">
+  <div style="position:relative">
+    <input id="placeSearch" type="text" placeholder="🔍 Search a town or address" autocomplete="off" aria-label="Search for a start place"
+      style="width:100%;padding:8px 9px;background:#0e1722;color:var(--ink);border:1px solid #2a3a4d;border-radius:7px;font-size:14px">
+    <div id="searchResults"></div>
+  </div>
+  <div class="startrow" style="margin-top:6px">
     <button id="setMe">📍 My location</button>
     <button id="setVan">Vancouver</button>
   </div>
-  <div style="position:relative">
-    <input id="placeSearch" type="text" placeholder="🔍 …or type a town or address" autocomplete="off" aria-label="Search for a start place"
-      style="width:100%;margin-top:6px;padding:8px 9px;background:#0e1722;color:var(--ink);border:1px solid #2a3a4d;border-radius:7px;font-size:14px">
-    <div id="searchResults"></div>
-  </div>
-  <div style="color:var(--mut);font-size:11px;margin:4px 0 6px"><b style="color:var(--gd)">Tap the map</b> or drag the pin to start anywhere.</div>
+  <div style="color:var(--mut);font-size:11.5px;margin:4px 0 7px">Start: <b id="startlbl">Vancouver</b> · <b style="color:var(--gd)">tap the map</b> to move it.</div>
   <div class="startrow" id="modes"></div>
   <div style="display:flex;gap:8px;align-items:center;margin-top:8px">
     <span style="font-size:13.5px">Time</span>
@@ -167,18 +167,18 @@ details.adv>summary:hover{color:var(--ink)}
     <span class="v" id="budv" style="margin-left:auto;color:var(--gold);font-weight:700">5h</span>
   </div>
   <input type="range" id="budget" min="1" max="14" step="0.5" value="5" style="margin-top:6px">
-  <div style="display:flex;gap:8px;align-items:center;margin-top:9px">
-    <span style="font-size:13.5px">Max travel each way</span>
-    <select id="maxleg" style="margin-left:auto">
-      <option value="0" selected>No limit</option>
-      <option value="0.25">15 min</option><option value="0.5">30 min</option>
-      <option value="1">1h</option><option value="1.5">1h 30</option>
-      <option value="2">2h</option><option value="3">3h</option>
-      <option value="4">4h</option><option value="6">6h</option>
-      <option value="8">8h</option><option value="12">12h</option>
-    </select>
-  </div>
   <details class="adv"><summary>More options</summary>
+    <div style="display:flex;gap:8px;align-items:center;margin:4px 0 8px">
+      <span style="font-size:13.5px">Max travel each way</span>
+      <select id="maxleg" style="margin-left:auto">
+        <option value="0" selected>No limit</option>
+        <option value="0.25">15 min</option><option value="0.5">30 min</option>
+        <option value="1">1h</option><option value="1.5">1h 30</option>
+        <option value="2">2h</option><option value="3">3h</option>
+        <option value="4">4h</option><option value="6">6h</option>
+        <option value="8">8h</option><option value="12">12h</option>
+      </select>
+    </div>
     <div style="display:flex;gap:8px;align-items:center;margin:2px 0 6px">
       <span style="font-size:13.5px">Worth the drive</span>
       <select id="minratio" style="margin-left:auto">
@@ -195,7 +195,8 @@ details.adv>summary:hover{color:var(--ink)}
   </details>
   <button id="plan">Plan my trip →</button>
   <div id="trips"></div>
-  <div id="prospects"><div class="hd" style="margin-top:10px">🔭 Plan a trip — the destination shows what you might record there.</div></div>
+  </div>
+  <div id="prospects"><div class="hd" style="margin-top:10px">🔭 Tap a cell (or plan a trip) to see what to record there.</div></div>
 
   <details class="adv"><summary>Map style</summary>
     <select id="basemap" class="full" style="margin-top:4px"></select>
@@ -215,7 +216,7 @@ details.adv>summary:hover{color:var(--ink)}
   </details>
 </div>
 <div id="map"></div>
-<div id="viewtoggle"><button id="vplan" class="on">🗺 Plan a trip</button><button id="vcompare">📊 Compare goals</button></div>
+<div id="viewtoggle"><button id="vexplore" class="on">🗺 Explore</button><button id="vplan">🧭 Plan a trip</button><button id="vcompare">📊 Compare goals</button></div>
 <div id="insights"></div>
 </div>
 
@@ -331,7 +332,7 @@ setBase('Light & muted');
 let markers=[], routeLine=null, destMarker=null, destCell=null, lastFit=null, lastScored=null, planned=false;
 const VAN=[49.28,-123.12];
 const w0={}; OBJ.forEach((o,i)=>w0[o.key]=DEFAULT[i]);
-const state={taxon:(DATA["All biodiversity"]?"All biodiversity":Object.keys(DATA)[0]), w:w0, start:VAN.slice(), budget:5, maxLeg:0, minRatio:0.5, unit:'Hours', lowc:false, mode:'Drive', startProsp:false};
+const state={taxon:(DATA["All biodiversity"]?"All biodiversity":Object.keys(DATA)[0]), w:w0, start:VAN.slice(), budget:5, maxLeg:0, minRatio:0.5, unit:'Hours', lowc:false, mode:'Drive', startProsp:false, view:'explore'};
 function debounce(fn,ms){let t;return(...a)=>{clearTimeout(t);t=setTimeout(()=>fn(...a),ms);};}
 const replan=debounce(()=>{if(planned)planTrip();},650);
 
@@ -340,7 +341,7 @@ const destIcon=L.divIcon({className:'',iconSize:[26,38],iconAnchor:[13,36],html:
 const startMarker=L.marker(state.start,{draggable:true,icon:startIcon,zIndexOffset:1000}).addTo(map).bindTooltip("Start — drag me, or tap the map");
 startMarker.on('drag',()=>{const ll=startMarker.getLatLng();state.start=[ll.lat,ll.lng];});
 startMarker.on('dragend',()=>{const ll=startMarker.getLatLng();setStart(ll.lat,ll.lng);});
-map.on('click',e=>setStart(e.latlng.lat,e.latlng.lng));
+map.on('click',e=>{state.view==='explore'?exploreCell(e.latlng.lat,e.latlng.lng):setStart(e.latlng.lat,e.latlng.lng);});
 function setStartLabel(s){document.getElementById('startlbl').textContent=s;}
 function setStart(lat,lon,tag){state.start=[lat,lon];startMarker.setLatLng([lat,lon]);
   setStartLabel((tag?tag+' · ':'')+lat.toFixed(3)+', '+lon.toFixed(3));
@@ -359,7 +360,7 @@ const HALF=0.125;   // half a 0.25-deg cell
 function buildMarkers(){
   markers.forEach(m=>map.removeLayer(m.mk));markers=[];
   for(const r of rows()){const mk=L.rectangle([[r[0]-HALF,r[1]-HALF],[r[0]+HALF,r[1]+HALF]],{stroke:false,fillOpacity:.5});
-    mk.on('click',e=>setStart(e.latlng.lat,e.latlng.lng));   // tapping a cell sets your start there (uniform with tapping empty map)
+    mk.on('click',e=>{state.view==='explore'?exploreCell(r[0],r[1]):setStart(e.latlng.lat,e.latlng.lng);});   // explore: show what to record here; plan: set start
     mk.addTo(map);markers.push({mk,r});}
   recolour();
 }
@@ -578,16 +579,31 @@ function renderInsights(){
     : `They point to different places in <b>${neg} of ${n}</b> groups shown — quantity and rarity often diverge, but not always.`;
   document.getElementById('idis').innerHTML=`<b>Discover vs. find-rare-species</b> — Spearman ρ between cell rankings (over cells with records; negative = opposite places): ${dis}. ${verdict}`;
 }
+// Explore mode: tap a cell to see its score + what to record there (no trip planning).
+function exploreCell(lat,lon){
+  let best=markers[0],bd=1e9;for(const m of markers){const d=Math.abs(m.r[0]-lat)+Math.abs(m.r[1]-lon);if(d<bd){bd=d;best=m;}}
+  const o=best,dest=[o.r[0],o.r[1]];clearRoute();
+  destCell=L.rectangle([[dest[0]-0.125,dest[1]-0.125],[dest[0]+0.125,dest[1]+0.125]],{color:'#1b7837',weight:2,dashArray:'5 5',fillColor:'#74c476',fillOpacity:0.16,interactive:false}).addTo(map);
+  destMarker=L.marker(dest,{icon:destIcon,zIndexOffset:900}).addTo(map)
+    .bindPopup(`<b>This area</b> — anywhere in the highlighted ~25 km cell<br><span style="color:#667">centre ${dest[0].toFixed(2)}, ${dest[1].toFixed(2)}</span><br>impact <b>${(o.t*100|0)}/100</b> · ${contribStr(o.r)}`).openPopup();
+  fetchProspects(dest[0],dest[1],'Your destination');
+}
 function setView(v){
+  state.view=v;
   document.getElementById('insights').style.display=v==='compare'?'block':'none';
+  document.getElementById('tripui').style.display=v==='plan'?'':'none';
+  document.getElementById('vexplore').classList.toggle('on',v==='explore');
   document.getElementById('vplan').classList.toggle('on',v==='plan');
   document.getElementById('vcompare').classList.toggle('on',v==='compare');
-  if(v==='compare') renderInsights(); else map.invalidateSize();
+  if(v!=='plan')clearRoute();
+  if(v==='compare')renderInsights(); else map.invalidateSize();
 }
+document.getElementById('vexplore').onclick=()=>setView('explore');
 document.getElementById('vplan').onclick=()=>setView('plan');
 document.getElementById('vcompare').onclick=()=>setView('compare');
 
 buildMarkers();
+setView('explore');
 </script></body></html>"""
 
 out = (HTML.replace("__DATA__", json.dumps(DATA, separators=(",", ":")))
