@@ -13,9 +13,9 @@ FILES = CA_INDEX["files"]
 # rows: [lat, lon, discover, conservation, env, staleness, urgency, travel_min, n_train]
 OBJ = [
     {"key": "discover",     "name": "Discover the most species", "q": "go where few people have looked"},
-    {"key": "conservation", "name": "Find rare species",          "q": "go where range-restricted species already are"},
+    {"key": "conservation", "name": "Find rare species",          "q": "go where range-restricted species are \u2014 national layer in progress"},
     {"key": "env",          "name": "Cover every habitat",        "q": "go where the climate is under-sampled"},
-    {"key": "staleness",    "name": "Freshest gaps",              "q": "go where no one has been lately"},
+    {"key": "staleness",    "name": "Freshest gaps",              "q": "go where no one has been lately \u2014 approximate nationally"},
     {"key": "urgency",      "name": "Sample before it's lost",    "q": "go where forest cover was recently lost (logging, fire, dieback)"},
 ]
 # order matches OBJ: [discover, conservation, env, staleness, urgency]
