@@ -27,7 +27,7 @@ PRESETS = [
     {"name": "Most Wanted",         "w": [0.1, 1, 0, 0, 0.3],       "proj": "blitz-the-gap-canada-s-most-wanted",  "blurb": "Range-restricted, at-risk species — national rarity layer still in progress."},
     {"name": "Too Hot to Handle",   "w": [0.2, 0.4, 0.2, 0, 1],     "proj": "blitz-the-gap-too-hot-to-handle",     "blurb": "Climate-exposed species in the fastest-warming areas."},
     {"name": "Climate Gap",         "w": [0.2, 0, 1, 0.2, 0],       "proj": "blitz-the-gap-closing-the-climate-gap","blurb": "Visit under-sampled climate & habitat types."},
-    {"name": "Revisit the Past",    "w": [0.3, 0.2, 0, 1, 0],       "proj": "blitz-the-gap-revisiting-the-past",   "blurb": "Re-find species not recorded in a cell for years."},
+    {"name": "Revisit the Past",    "w": [0.3, 0.2, 0, 1, 0],       "proj": "blitz-the-gap-revisiting-the-past",   "blurb": "Cells overlooked lately — staleness is approximate nationally."},
 ]
 DEFAULT = PRESETS[0]["w"]
 
@@ -368,7 +368,7 @@ const I18N={
     obj_name:["Discover the most species","Find rare species","Cover every habitat","Freshest gaps","Sample before it's lost"],
     obj_q:["go where few people have looked","go where range-restricted species are — national layer in progress","go where the climate is under-sampled","go where no one has been lately — approximate nationally","go where forest cover was recently lost (logging, fire, dieback)"],
     preset_name:["Biodiversity impact","The Other 99%","Most Wanted","Too Hot to Handle","Climate Gap","Revisit the Past"],
-    preset_blurb:["Under-sampling + climate gaps — the strongest signal nationwide.","Skip the busy 1% — record in Canada's under-sampled 99%.","Range-restricted, at-risk species — national rarity layer still in progress.","Climate-exposed species in the fastest-warming areas.","Visit under-sampled climate & habitat types.","Re-find species not recorded in a cell for years."],
+    preset_blurb:["Under-sampling + climate gaps — the strongest signal nationwide.","Skip the busy 1% — record in Canada's under-sampled 99%.","Range-restricted, at-risk species — national rarity layer still in progress.","Climate-exposed species in the fastest-warming areas.","Visit under-sampled climate & habitat types.","Cells overlooked lately — staleness is approximate nationally."],
     group:{Amphibia:"Amphibians",Aves:"Birds",Insecta:"Insects",Mammalia:"Mammals",Reptilia:"Reptiles",Plantae:"Plants",Fungi:"Fungi","All biodiversity":"All biodiversity"},
     modes:{Walk:"Walk",Cycle:"Cycle",Drive:"Drive"},
   },
@@ -471,7 +471,7 @@ const I18N={
     obj_name:["Découvrir le plus d'espèces","Trouver des espèces rares","Couvrir chaque habitat","Lacunes les plus fraîches","Échantillonner avant qu'il soit trop tard"],
     obj_q:["allez où peu de gens ont cherché","allez où se trouvent les espèces à aire restreinte — couche nationale en cours","allez où le climat est sous-échantillonné","allez où personne n'est allé récemment — approximatif à l'échelle nationale","allez où le couvert forestier a été récemment perdu (coupe, feu, dépérissement)"],
     preset_name:["Impact sur la biodiversité","Les autres 99 %","Les plus recherchées","Trop chaud pour durer","Lacune climatique","Revisiter le passé"],
-    preset_blurb:["Sous-représentation + lacunes climatiques — le signal le plus fort au pays.","Évitez le 1 % achalandé — observez dans le 99 % sous-échantillonné du Canada.","Espèces à aire restreinte et en péril — couche nationale de rareté encore en cours.","Espèces exposées au climat dans les zones qui se réchauffent le plus vite.","Visitez les types de climat et d'habitat sous-échantillonnés.","Retrouvez des espèces non observées dans une cellule depuis des années."],
+    preset_blurb:["Sous-représentation + lacunes climatiques — le signal le plus fort au pays.","Évitez le 1 % achalandé — observez dans le 99 % sous-échantillonné du Canada.","Espèces à aire restreinte et en péril — couche nationale de rareté encore en cours.","Espèces exposées au climat dans les zones qui se réchauffent le plus vite.","Visitez les types de climat et d'habitat sous-échantillonnés.","Cellules négligées récemment — la fraîcheur est approximative à l'échelle nationale."],
     group:{Amphibia:"Amphibiens",Aves:"Oiseaux",Insecta:"Insectes",Mammalia:"Mammifères",Reptilia:"Reptiles",Plantae:"Plantes",Fungi:"Champignons","All biodiversity":"Toute la biodiversité"},
     modes:{Walk:"Marche",Cycle:"Vélo",Drive:"Voiture"},
   }
