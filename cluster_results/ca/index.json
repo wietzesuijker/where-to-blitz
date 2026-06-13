@@ -19,7 +19,7 @@
     "Reptilia": "webapp_data_Reptilia.json",
     "All biodiversity": "webapp_data_All_biodiversity.json"
   },
-  "n_cells": 38242,
+  "n_cells": 32643,
   "bbox": [
     -141.0,
     41.0,
@@ -56,5 +56,6 @@
     "Reptilia": "All",
     "Fungi": "All",
     "All biodiversity": "All"
-  }
+  },
+  "land_mask": "Natural Earth 50m admin_0; kept Canada + United States land; dropped ocean (Hudson/Baffin Bay) + Greenland"
 }
