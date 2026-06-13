@@ -16,14 +16,17 @@ OBJ = [
     {"key": "urgency",      "name": "Sample before it's lost",    "q": "go where forest cover was recently lost (logging, fire, dieback)"},
 ]
 # order matches OBJ: [discover, conservation, env, staleness, urgency]
-PRESETS = {
-    "Biodiversity impact": [0.4, 1.0, 0.6, 0.3, 0.7],   # default — leans to rare + at-risk + coverage
-    "Discovery":    [1, 0, 0, 0, 0],
-    "Conservation": [0, 1, 0, 0, 0],
-    "Habitat coverage": [0, 0, 1, 0, 0],
-    "Balanced":     [1, 1, 1, 0.5, 0.5],
-}
-DEFAULT = PRESETS["Biodiversity impact"]
+# Named Blitz the Gap challenges (real, verified iNaturalist sub-projects), each mapped
+# onto our 5 goal axes [discover, conservation, env, staleness, urgency].
+PRESETS = [
+    {"name": "Biodiversity impact", "w": [0.4, 1.0, 0.6, 0.3, 0.7], "proj": "blitz-the-gap-2026-general",         "blurb": "Balanced — rare & at-risk species, habitat coverage and urgency."},
+    {"name": "The Other 99%",       "w": [1, 0, 0.3, 0.2, 0],       "proj": "blitz-the-gap-the-other-99",          "blurb": "Skip the busy 1% — record in Canada's under-sampled 99%."},
+    {"name": "Most Wanted",         "w": [0.1, 1, 0, 0, 0.3],       "proj": "blitz-the-gap-canada-s-most-wanted",  "blurb": "Areas rich in range-restricted, at-risk species."},
+    {"name": "Too Hot to Handle",   "w": [0.2, 0.4, 0.2, 0, 1],     "proj": "blitz-the-gap-too-hot-to-handle",     "blurb": "Climate-exposed species in the fastest-warming areas."},
+    {"name": "Climate Gap",         "w": [0.2, 0, 1, 0.2, 0],       "proj": "blitz-the-gap-closing-the-climate-gap","blurb": "Visit under-sampled climate & habitat types."},
+    {"name": "Revisit the Past",    "w": [0.3, 0.2, 0, 1, 0],       "proj": "blitz-the-gap-revisiting-the-past",   "blurb": "Re-find species not recorded in a cell for years."},
+]
+DEFAULT = PRESETS[0]["w"]
 
 HTML = r"""<!doctype html>
 <html lang="en"><head>
@@ -146,6 +149,7 @@ details.adv>summary:hover{color:var(--ink)}
   </div>
   <select id="taxon" class="full" style="margin-bottom:8px"></select>
   <div class="presets" id="presets"></div>
+  <div id="challengeBlurb" style="color:var(--mut);font-size:11.5px;line-height:1.4;margin:5px 0 2px"></div>
   <details class="adv"><summary>Fine-tune the five goals</summary><div id="objs"></div></details>
 
   <div id="tripui">
@@ -256,7 +260,7 @@ async function fetchProspects(lat,lon,where){
     pr.innerHTML=`<div class="hd">🔭 <b style="color:var(--ink)">${where||'Here'}</b> · ${total.toLocaleString()} species recorded. Keep an eye out for${nearby?' (✦ = nearby)':''}:</div>`+
       '<div class="prospects">'+res.map(r=>{const t=r.taxon,g=t.observations_count||0,rare=g<1500,unc=g<7000;
         return `<a class="sp" href="https://www.inaturalist.org/taxa/${t.id}" target="_blank" rel="noopener" title="${t.name}"><img src="${t.default_photo.square_url}" loading="lazy" alt=""><div class="nm">${r._here?'':'✦ '}${t.preferred_common_name||t.name}${rare?' <span class="rare">rare</span>':(unc?' <span class="unc">uncommon</span>':'')}</div><div class="ct">${r._here?r.count+' here':'nearby'} · ${g.toLocaleString()} worldwide</div></a>`;}).join('')+'</div>'+'<div id="firsts"></div>'+
-      `<div style="margin-top:7px;font-size:11.5px"><a href="${ex}" target="_blank" rel="noopener" style="color:var(--acc)">Explore all on iNaturalist →</a> &nbsp;·&nbsp; <a href="https://www.inaturalist.org/observations/new" target="_blank" rel="noopener" style="color:var(--gd)">＋ Log a sighting</a> &nbsp;·&nbsp; <a href="https://www.inaturalist.org/projects/blitz-the-gap-2026-general" target="_blank" rel="noopener" style="color:var(--mut)">for Blitz the Gap</a></div>`;
+      `<div style="margin-top:7px;font-size:11.5px"><a href="${ex}" target="_blank" rel="noopener" style="color:var(--acc)">Explore all on iNaturalist →</a> &nbsp;·&nbsp; <a href="https://www.inaturalist.org/observations/new" target="_blank" rel="noopener" style="color:var(--gd)">＋ Log a sighting</a> &nbsp;·&nbsp; <a href="https://www.inaturalist.org/projects/${state.project}" target="_blank" rel="noopener" style="color:var(--mut)">for this challenge</a></div>`;
     // "Fill the gap": species common in the ~50 km neighbourhood but missing from THIS cell's
     // research-grade records (cell query widened to 500 to keep the absence honest). Framed as
     // "missing from this cell", not "nobody has seen it here" -- records-based, not absolute.
@@ -332,7 +336,7 @@ setBase('Light & muted');
 let markers=[], routeLine=null, destMarker=null, destCell=null, lastFit=null, lastScored=null, planned=false;
 const VAN=[49.28,-123.12];
 const w0={}; OBJ.forEach((o,i)=>w0[o.key]=DEFAULT[i]);
-const state={taxon:(DATA["All biodiversity"]?"All biodiversity":Object.keys(DATA)[0]), w:w0, start:VAN.slice(), budget:5, maxLeg:0, minRatio:0.5, unit:'Hours', lowc:false, mode:'Drive', startProsp:false, view:'explore'};
+const state={taxon:(DATA["All biodiversity"]?"All biodiversity":Object.keys(DATA)[0]), w:w0, start:VAN.slice(), budget:5, maxLeg:0, minRatio:0.5, unit:'Hours', lowc:false, mode:'Drive', startProsp:false, view:'explore', project:'blitz-the-gap-2026-general'};
 function debounce(fn,ms){let t;return(...a)=>{clearTimeout(t);t=setTimeout(()=>fn(...a),ms);};}
 const replan=debounce(()=>{if(planned)planTrip();},650);
 
@@ -385,9 +389,10 @@ OBJ.forEach(o=>{const d=document.createElement('div');d.className='obj';
 function applyWeights(arr,name){OBJ.forEach((o,i)=>{state.w[o.key]=arr[i];document.getElementById('s_'+o.key).value=arr[i];document.getElementById('v_'+o.key).textContent=arr[i].toFixed(2);});markPreset(name);recolour();replan();}
 const presetsDiv=document.getElementById('presets');
 function markPreset(name){[...presetsDiv.children].forEach(b=>b.classList.toggle('on',b.textContent===name));}
-const PRESET_TIPS={'Biodiversity impact':'Default mix — leans to rare & at-risk species and habitat coverage, plus some discovery and urgency.','Discovery':'Go where few people have looked (pure under-sampling).','Conservation':'Go where range-restricted, rare species already are.','Habitat coverage':'Go where the climate / habitat is under-sampled.','Balanced':'Equal weight on discovery, rarity and habitat, plus freshness and urgency.'};
-Object.entries(PRESETS).forEach(([n,a])=>{const b=document.createElement('button');b.textContent=n;b.title=PRESET_TIPS[n]||'';b.onclick=()=>applyWeights(a,n);presetsDiv.appendChild(b);});
-markPreset('Biodiversity impact');
+function applyChallenge(p){applyWeights(p.w,p.name);state.project=p.proj;
+  document.getElementById('challengeBlurb').innerHTML=p.blurb+' <a href="https://www.inaturalist.org/projects/'+p.proj+'" target="_blank" rel="noopener" style="color:var(--acc);white-space:nowrap">join \u2192</a>';}
+PRESETS.forEach(p=>{const b=document.createElement('button');b.textContent=p.name;b.title=p.blurb;b.onclick=()=>applyChallenge(p);presetsDiv.appendChild(b);});
+applyChallenge(PRESETS[0]);
 
 const bmSel=document.getElementById('basemap');
 Object.keys(BASEMAPS).forEach(n=>{const o=document.createElement('option');o.value=o.textContent=n;bmSel.appendChild(o);});
