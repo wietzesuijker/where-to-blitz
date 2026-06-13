@@ -821,7 +821,7 @@ function unitLbl(u,v){return v+(u==='Minutes'?' min':u==='Days'?' d':'h');}
 function refreshBudget(){const c=UNITS[state.unit],v=parseFloat(budgetEl.value);state.budget=v*c.toH;budvEl.textContent=unitLbl(state.unit,v);replan();}
 document.getElementById('unit').addEventListener('change',e=>{state.unit=e.target.value;const c=UNITS[state.unit];budgetEl.min=c.min;budgetEl.max=c.max;budgetEl.step=c.step;budgetEl.value=c.def;refreshBudget();});
 budgetEl.addEventListener('input',refreshBudget);
-document.getElementById('lowc').addEventListener('change',e=>{state.lowc=e.target.checked;if(lastFit)rankAndRender();});
+document.getElementById('lowc').addEventListener('change',e=>{state.lowc=e.target.checked;if(lastFit&&state.planMode!=='dest')rankAndRender();});
 document.getElementById('startProsp').addEventListener('change',e=>{state.startProsp=e.target.checked; if(state.startProsp) fetchProspects(state.start[0],state.start[1],'around_start');});
 
 const modesDiv=document.getElementById('modes');
@@ -1041,6 +1041,7 @@ async function renderInsights(){
 }
 // Explore mode: tap a cell to see its score + what to record there (no trip planning).
 function exploreCell(lat,lon){
+  if(!markers.length)return;   // map tapped before cell data loaded
   let best=markers[0],bd=1e9;for(const m of markers){const d=Math.abs(m.r[0]-lat)+Math.abs(m.r[1]-lon);if(d<bd){bd=d;best=m;}}
   const o=best,dest=[o.r[0],o.r[1]];clearRoute();
   let geLine='';if(geActive()){const v=GE[gekey(dest[0],dest[1])];geLine='<div style="margin-bottom:4px">'+t('ge_most')+' <b>'+(!v||v[0]<0?t('ge_all'):t('ge_cats')[v[0]])+'</b></div>';}
