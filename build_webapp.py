@@ -196,6 +196,7 @@ details.adv>summary:hover{color:var(--ink)}
   </div>
   <div style="color:var(--mut);font-size:11.5px;margin:4px 0 7px" data-i18n-html="start_hint">Start: <b id="startlbl">Vancouver</b> · <b style="color:var(--gd)">tap the map</b> to move it.</div>
   <div class="startrow" id="modes"></div>
+  <div id="modewhy" style="color:var(--mut);font-size:11px;margin:2px 0 0"></div>
   <div style="display:flex;gap:8px;align-items:center;margin-top:8px">
     <span style="font-size:13.5px" data-i18n="time">Time</span>
     <select id="unit"><option value="Minutes" data-i18n="unit_minutes">Minutes</option><option value="Hours" selected data-i18n="unit_hours">Hours</option><option value="Days" data-i18n="unit_days">Days</option></select>
@@ -349,6 +350,7 @@ const I18N={
     join:"join →",
     more_challenges:"+ see all official challenges →",
     finding_routes:m=>`Finding real ${m} routes…`,
+    mode_why:(label,green)=>green?`${label} — the greenest way to reach a gap in your time budget.`:`${label} — the nearest worthwhile gap is too far to walk or cycle in time.`,
     best_trips:(bud,lowc,est)=>`Best trips within ${bud} — most <b style="color:var(--ink)">impact × time you'd get to record</b>${lowc?', per kg CO₂':''}${est?' (some times estimated)':''}:`,
     or_skip:"Or skip the drive:",
     no_fit:(bud,mode)=>`No round trip fits ${bud} by ${mode} from here. The best move is to record where you are — or go farther with more time:`,
@@ -462,6 +464,7 @@ const I18N={
     join:"se joindre →",
     more_challenges:"+ voir tous les défis officiels →",
     finding_routes:m=>`Recherche d'itinéraires ${m} réels…`,
+    mode_why:(label,green)=>green?`${label} — le moyen le plus écolo d'atteindre une lacune dans votre temps.`:`${label} — la lacune la plus proche est trop loin pour la marche ou le vélo à temps.`,
     best_trips:(bud,lowc,est)=>`Meilleures sorties en ${bud} — le plus d'<b style="color:var(--ink)">impact × temps pour observer</b>${lowc?', par kg de CO₂':''}${est?' (certains temps estimés)':''} :`,
     or_skip:"Ou évitez le déplacement :",
     no_fit:(bud,mode)=>`Aucun aller-retour ne tient en ${bud} en ${mode} d'ici. Le mieux est d'observer là où vous êtes — ou d'aller plus loin avec plus de temps :`,
@@ -675,7 +678,7 @@ setBase('Light & muted');
 let markers=[], routeLine=null, destMarker=null, destCell=null, lastFit=null, lastScored=null, planned=false, lastDest=null;
 const VAN=[49.28,-123.12];
 const w0={}; OBJ.forEach((o,i)=>w0[o.key]=DEFAULT[i]);
-const state={taxon:(FILES["All biodiversity"]?"All biodiversity":Object.keys(FILES)[0]), w:w0, start:VAN.slice(), budget:5, maxLeg:0, minRatio:0.5, unit:'Hours', lowc:false, mode:'Drive', startProsp:false, view:'explore', startSet:false, planMode:'auto', project:'blitz-the-gap-2026-general'};
+const state={taxon:(FILES["All biodiversity"]?"All biodiversity":Object.keys(FILES)[0]), w:w0, start:VAN.slice(), budget:5, maxLeg:0, minRatio:0.5, unit:'Hours', lowc:false, mode:'Walk', modeSet:false, startProsp:false, view:'explore', startSet:false, planMode:'auto', project:'blitz-the-gap-2026-general'};
 function debounce(fn,ms){let t;return(...a)=>{clearTimeout(t);t=setTimeout(()=>fn(...a),ms);};}
 const replan=debounce(()=>{if(!planned)return;if(state.planMode==='dest'&&lastDest)setDest(lastDest[0],lastDest[1]);else planTrip();},650);
 
@@ -818,12 +821,26 @@ document.getElementById('lowc').addEventListener('change',e=>{state.lowc=e.targe
 document.getElementById('startProsp').addEventListener('change',e=>{state.startProsp=e.target.checked; if(state.startProsp) fetchProspects(state.start[0],state.start[1],'around_start');});
 
 const modesDiv=document.getElementById('modes');
+function markModeBtn(){[...modesDiv.children].forEach(x=>x.classList.toggle('on',x.dataset.m===state.mode));}
+function setModeWhy(html){const el=document.getElementById('modewhy');if(el)el.innerHTML=html;}
 function rebuildModes(){modesDiv.innerHTML='';
   Object.keys(MODES).forEach(mn=>{const b=document.createElement('button');b.textContent=MODES[mn].icon+' '+modeName(mn);b.dataset.m=mn;
-    b.onclick=()=>{state.mode=mn;[...modesDiv.children].forEach(x=>x.classList.toggle('on',x.dataset.m===mn));replan();};
+    b.onclick=()=>{state.mode=mn;state.modeSet=true;setModeWhy('');markModeBtn();replan();};   // an explicit pick is honoured; the auto-reason line clears
     modesDiv.appendChild(b);});
-  [...modesDiv.children].forEach(x=>x.classList.toggle('on',x.dataset.m===state.mode));}
+  markModeBtn();}
 rebuildModes();
+// The default mode is derived, not assumed: the greenest mode that can actually reach a real
+// gap from the user's start within their time budget. Uses the cheap straight-line estimate
+// (same predicate planTrip filters on) so it's instant and needs no routing call.
+function estOneH(km,mode){return (km*ROAD_FACTOR)/MODES[mode].kmh;}
+function greenestForAnyGap(){const [sl,so]=state.start,budget=state.budget,cap=state.maxLeg>0?state.maxLeg:Infinity;
+  const kms=markers.filter(m=>impact(m.r)>0).map(m=>haversine(sl,so,m.r[0],m.r[1]));
+  for(const mn of Object.keys(MODES))if(kms.some(km=>{const e=estOneH(km,mn);return 2*e<=budget-MIN_FIELD_H&&e<=cap*1.5;}))return mn;
+  return 'Drive';}   // nothing greener reaches a gap in budget — driving is the honest fallback
+function greenestForCell(km){const budget=state.budget;
+  for(const mn of Object.keys(MODES))if(2*estOneH(km,mn)<=budget-MIN_FIELD_H)return mn;
+  return 'Drive';}
+function applyAutoMode(mode){state.mode=mode;markModeBtn();setModeWhy(t('mode_why',MODES[mode].icon+' '+modeName(mode),mode!=='Drive'));}
 
 // type a town/address -> Nominatim forward geocoding (biased to BC/Canada), pick from a dropdown
 const psEl=document.getElementById('placeSearch'), srEl=document.getElementById('searchResults');
@@ -857,6 +874,7 @@ function ipLoc(ok){fetch('https://ipapi.co/json/').then(r=>r.json()).then(j=>{if
 document.getElementById('plan').onclick=async()=>{await planTrip();const t=document.getElementById('trips');if(t)t.scrollIntoView({behavior:'smooth',block:'start'});};
 async function planTrip(){
   planned=true;state.planMode='auto';
+  if(!state.modeSet)applyAutoMode(greenestForAnyGap());
   const trips=document.getElementById('trips');const [slat,slon]=state.start,budget=state.budget,M=MODES[state.mode];
   const all=markers.map(m=>{const km=haversine(slat,slon,m.r[0],m.r[1]);return {m,km,estOne:(km*ROAD_FACTOR)/M.kmh,imp:impact(m.r)};});
   // Pick candidates BEFORE we know routability, so blend two signals: the highest-impact
@@ -892,8 +910,10 @@ async function setDest(lat,lon){
   planned=true;state.planMode='dest';lastDest=[lat,lon];
   let best=markers[0],bd=1e9;for(const m of markers){const d=Math.abs(m.r[0]-lat)+Math.abs(m.r[1]-lon);if(d<bd){bd=d;best=m;}}
   if(!best)return;
-  const [slat,slon]=state.start,budget=state.budget,M=MODES[state.mode];
+  const [slat,slon]=state.start,budget=state.budget;
   const km=haversine(slat,slon,best.r[0],best.r[1]);
+  if(!state.modeSet)applyAutoMode(greenestForCell(km));   // greenest mode that fits THIS trip in budget
+  const M=MODES[state.mode];
   const trips=document.getElementById('trips');
   if(trips)trips.innerHTML='<div class="hd">'+t('finding_routes',modeName(state.mode).toLowerCase())+'</div>';
   let oneH=(km*ROAD_FACTOR)/M.kmh,oneKm=km*ROAD_FACTOR,geo=null,real=false;
