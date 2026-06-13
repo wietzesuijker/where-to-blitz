@@ -129,7 +129,7 @@ details.adv>summary:hover{color:var(--ink)}
 @media(max-width:640px){#loading{left:50%;top:74vh}}
 </style></head>
 <body><div id="app">
-<div id="panel">
+<div id="panel" role="main">
   <div class="langtoggle" role="group" aria-label="Language"><button id="lang-en" type="button">EN</button><button id="lang-fr" type="button">FR</button></div>
   <h1 data-i18n-html="title_full">Where to <a href="https://blitzthegap.org" target="_blank" rel="noopener" style="color:var(--gd);text-decoration:underline">Blitz the Gap</a></h1>
   <p class="sub" data-i18n-html="sub">Choose what counts as <b>impact</b>, then <b>explore</b> the priority map — or <b>plan a trip</b> to the best spot you can reach and get back from.</p>
@@ -145,7 +145,7 @@ details.adv>summary:hover{color:var(--ink)}
     </ul>
     A planning aid, not ground truth — please obscure sensitive species and respect Indigenous data sovereignty. <a href="https://blitzthegap.org" target="_blank" rel="noopener" style="color:var(--acc)">How Blitz the Gap works →</a>
   </div>
-  <select id="taxon" class="full" style="margin-bottom:8px"></select>
+  <select id="taxon" class="full" aria-label="Life group" style="margin-bottom:8px"></select>
   <div class="presets" id="presets"></div>
   <div id="challengeBlurb" style="color:var(--mut);font-size:11.5px;line-height:1.4;margin:5px 0 2px"></div>
   <div style="font-size:11px;margin:1px 0 3px"><a href="https://pollocklab.github.io/blitz-the-gap/" target="_blank" rel="noopener" data-i18n="more_challenges" style="color:var(--mut)">+ see all official challenges →</a></div>
@@ -223,10 +223,10 @@ details.adv>summary:hover{color:var(--ink)}
   </details>
   <details class="adv" ontoggle="renderCellTable()"><summary data-i18n="top_cells">♿ Top cells (accessible list)</summary><div id="celltable"></div></details>
 </div>
-<div id="map"></div>
-<div id="viewtoggle"><button id="vexplore" class="on" data-i18n="view_explore">🗺 Explore</button><button id="vplan" data-i18n="view_plan">🧭 Plan a trip</button><button id="vcompare" data-i18n="view_compare">📊 Compare goals</button></div>
+<div id="map" role="application" aria-label="Interactive priority map (screen-reader users: use the Top cells list)"></div>
+<div id="viewtoggle" role="navigation" aria-label="Map views"><button id="vexplore" class="on" data-i18n="view_explore">🗺 Explore</button><button id="vplan" data-i18n="view_plan">🧭 Plan a trip</button><button id="vcompare" data-i18n="view_compare">📊 Compare goals</button></div>
 <div id="loading" data-i18n="loading">🍃 Loading the map…</div>
-<div id="maplegend"><div class="lt" data-i18n="legend_title">Where to blitz</div><div class="ramp"></div><div class="lab"><span data-i18n="legend_low">well-sampled</span><span data-i18n="legend_high">biggest gaps</span></div><div class="hint" data-i18n-html="legend_hint">Darker = higher priority. <span id="legendtap">Tap a cell to see what to record.</span></div></div>
+<div id="maplegend" role="region" aria-label="Map legend"><div class="lt" data-i18n="legend_title">Where to blitz</div><div class="ramp"></div><div class="lab"><span data-i18n="legend_low">well-sampled</span><span data-i18n="legend_high">biggest gaps</span></div><div class="hint" data-i18n-html="legend_hint">Darker = higher priority. <span id="legendtap">Tap a cell to see what to record.</span></div></div>
 <div id="insights"></div>
 </div>
 
@@ -670,7 +670,7 @@ const replan=debounce(()=>{if(!planned)return;if(state.planMode==='dest'&&lastDe
 
 const startIcon=L.divIcon({className:'',iconSize:[20,20],iconAnchor:[10,10],html:'<div style="width:18px;height:18px;border-radius:50%;background:#1f6fe0;border:3px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.45)"></div>'});
 const destIcon=L.divIcon({className:'',iconSize:[26,38],iconAnchor:[13,36],html:'<svg width="26" height="38" viewBox="0 0 26 38"><path d="M13 0C6 0 0 6 0 13c0 9 13 25 13 25s13-16 13-25C26 6 20 0 13 0z" fill="#f0a000" stroke="#fff" stroke-width="2"/><circle cx="13" cy="13" r="5" fill="#fff"/></svg>'});
-const startMarker=L.marker(state.start,{draggable:true,icon:startIcon,zIndexOffset:1000}).addTo(map).bindTooltip("Start — drag me, or tap the map");
+const startMarker=L.marker(state.start,{draggable:true,icon:startIcon,zIndexOffset:1000,alt:"Trip start — drag to move",title:"Start — drag me, or tap the map"}).addTo(map).bindTooltip("Start — drag me, or tap the map");
 startMarker.on('drag',()=>{const ll=startMarker.getLatLng();state.start=[ll.lat,ll.lng];});
 startMarker.on('dragend',()=>{const ll=startMarker.getLatLng();setStart(ll.lat,ll.lng);});
 map.on('click',e=>{state.view==='explore'?exploreCell(e.latlng.lat,e.latlng.lng):planTap(e.latlng.lat,e.latlng.lng);});
