@@ -1,4 +1,4 @@
-"""Builds where-to-go.html — an interactive trip planner for the Blitz the Gap
+"""Builds index.html — an interactive trip planner for the Blitz the Gap
 "where should I go to record biodiversity?" map. Leaflet basemap (OpenStreetMap +
 style switcher); a weight slider per goal blended into a live "impact" score; a
 start point + flexible time budget (minutes / hours / days); real driving routes
@@ -511,5 +511,5 @@ out = (HTML.replace("__DATA__", json.dumps(DATA, separators=(",", ":")))
            .replace("__OBJ__", json.dumps(OBJ))
            .replace("__PRESETS__", json.dumps(PRESETS))
            .replace("__DEFAULT__", json.dumps(DEFAULT)))
-open("where-to-go.html", "w").write(out)
-print("wrote where-to-go.html  ({:.0f} KB)".format(len(out) / 1024))
+open("index.html", "w").write(out)
+print("wrote index.html  ({:.0f} KB)".format(len(out) / 1024))

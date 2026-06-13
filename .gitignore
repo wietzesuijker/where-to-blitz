@@ -10,3 +10,6 @@ __pycache__/
 *.tif
 cluster_results/inat_*.csv
 *.log
+
+# claude-flow runtime/session state
+.claude-flow/
