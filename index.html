@@ -121,6 +121,8 @@ details.adv>summary:hover{color:var(--ink)}
 #maplegend .lab{display:flex;justify-content:space-between;font-size:10.5px;color:#5a6b7a}
 #maplegend .hint{margin-top:4px;color:#5a6b7a;font-size:10.5px}
 @media(max-width:640px){#maplegend{left:8px;bottom:auto;top:calc(50vh + 8px);max-width:158px;padding:6px 8px}}
+#loading{position:fixed;left:calc(360px + (100% - 360px)/2);top:46%;transform:translate(-50%,-50%);z-index:1200;background:rgba(255,255,255,.96);border-radius:10px;padding:11px 17px;box-shadow:0 3px 14px rgba(0,0,0,.25);font-size:14px;font-weight:600;color:#1b2a3a}
+@media(max-width:640px){#loading{left:50%;top:74vh}}
 </style></head>
 <body><div id="app">
 <div id="panel">
@@ -215,6 +217,7 @@ details.adv>summary:hover{color:var(--ink)}
 </div>
 <div id="map"></div>
 <div id="viewtoggle"><button id="vexplore" class="on">🗺 Explore</button><button id="vplan">🧭 Plan a trip</button><button id="vcompare">📊 Compare goals</button></div>
+<div id="loading">🍃 Loading the map…</div>
 <div id="maplegend"><div class="lt">Where to blitz</div><div class="ramp"></div><div class="lab"><span>well-sampled</span><span>biggest gaps</span></div><div class="hint">Darker = higher priority. <span id="legendtap">Tap a cell to see what to record.</span></div></div>
 <div id="insights"></div>
 </div>
@@ -400,7 +403,8 @@ const taxonSel=document.getElementById('taxon');
 Object.keys(FILES).forEach(t=>{const o=document.createElement('option');o.value=t;o.textContent=TAXLBL[t]||t;taxonSel.appendChild(o);});
 taxonSel.value=state.taxon; taxonSel.onchange=()=>{state.taxon=taxonSel.value;
   const pr=document.getElementById('prospects');if(pr)pr.innerHTML='<div class="hd">🔭 Loading '+(TAXLBL[state.taxon]||state.taxon)+'…</div>';
-  loadGroup(state.taxon).then(()=>{buildMarkers();setCoverage();if(document.getElementById('insights').style.display==='block')renderInsights();});};
+  if(typeof showLoading==='function')showLoading(true);
+  loadGroup(state.taxon).then(()=>{buildMarkers();setCoverage();if(document.getElementById('insights').style.display==='block')renderInsights();if(typeof showLoading==='function')showLoading(false);});};
 
 const objsDiv=document.getElementById('objs');
 OBJ.forEach(o=>{const d=document.createElement('div');d.className='obj';
@@ -648,5 +652,6 @@ document.getElementById('vexplore').onclick=()=>setView('explore');
 document.getElementById('vplan').onclick=()=>setView('plan');
 document.getElementById('vcompare').onclick=()=>setView('compare');
 
-loadGroup(state.taxon).then(()=>{buildMarkers();setView('explore');});
+function showLoading(on){const el=document.getElementById('loading');if(el)el.style.display=on?'block':'none';}
+loadGroup(state.taxon).then(()=>{buildMarkers();setView('explore');showLoading(false);});
 </script></body></html>
