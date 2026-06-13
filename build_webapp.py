@@ -421,7 +421,7 @@ function recolour(){
   const ord=vals.map((v,i)=>[v,i]).sort((a,b)=>a[0]-b[0]);const rank=new Array(vals.length);ord.forEach((p,k)=>rank[p[1]]=k);const n1=Math.max(vals.length-1,1);
   // If the chosen goal mix has no spatial signal (e.g. only a degenerate/placeholder axis like
   // national conservation=0), rank would paint a fake index gradient -- show a flat map instead.
-  const flat=(ord[ord.length-1][0]-ord[0][0])<1e-9;
+  const flat=ord.length>0&&(ord[ord.length-1][0]-ord[0][0])<1e-9;   // guard empty markers (recolour runs during init before data loads)
   // No per-cell tooltip: at ~38k cells binding one tooltip each tanks pan/zoom.
   // Cells stay clickable -- the click popup already shows the cell's score & drivers.
   markers.forEach((m,i)=>{const t=flat?0:rank[i]/n1;m.t=t;m.mk.setStyle({fillColor:colour(t),fillOpacity:cov?0:0.1+0.62*t});});
