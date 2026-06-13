@@ -373,7 +373,7 @@ const I18N={
     obj_q:["go where few people have looked","go where range-restricted species are — national layer in progress","go where the climate is under-sampled","go where no one has been lately — approximate nationally","go where forest cover was recently lost (logging, fire, dieback)"],
     preset_name:["Biodiversity impact","The Other 99%","Most Wanted","Too Hot to Handle","Climate Gap","Revisit the Past"],
     preset_blurb:["Under-sampling + climate gaps — the strongest signal nationwide.","Skip the busy 1% — record in Canada's under-sampled 99%.","Range-restricted, at-risk species — national rarity layer still in progress.","Climate-exposed species in the fastest-warming areas.","Visit under-sampled climate & habitat types.","Cells overlooked lately — staleness is approximate nationally."],
-    group:{Amphibia:"Amphibians",Aves:"Birds",Insecta:"Insects",Mammalia:"Mammals",Reptilia:"Reptiles",Plantae:"Plants",Fungi:"Fungi","All biodiversity":"All biodiversity"},
+    group:{Amphibia:"Amphibians",Aves:"Birds",Insecta:"Insects",Mammalia:"Mammals",Reptilia:"Reptiles",Plantae:"Plants",Fungi:"Fungi",Actinopterygii:"Fishes",Arachnida:"Arachnids",Mollusca:"Molluscs","All biodiversity":"All biodiversity"},
     modes:{Walk:"Walk",Cycle:"Cycle",Drive:"Drive"},
   },
   fr:{
@@ -479,7 +479,7 @@ const I18N={
     obj_q:["allez où peu de gens ont cherché","allez où se trouvent les espèces à aire restreinte — couche nationale en cours","allez où le climat est sous-échantillonné","allez où personne n'est allé récemment — approximatif à l'échelle nationale","allez où le couvert forestier a été récemment perdu (coupe, feu, dépérissement)"],
     preset_name:["Impact sur la biodiversité","Les autres 99 %","Les plus recherchées","Trop chaud pour durer","Lacune climatique","Revisiter le passé"],
     preset_blurb:["Sous-représentation + lacunes climatiques — le signal le plus fort au pays.","Évitez le 1 % achalandé — observez dans le 99 % sous-échantillonné du Canada.","Espèces à aire restreinte et en péril — couche nationale de rareté encore en cours.","Espèces exposées au climat dans les zones qui se réchauffent le plus vite.","Visitez les types de climat et d'habitat sous-échantillonnés.","Cellules négligées récemment — la fraîcheur est approximative à l'échelle nationale."],
-    group:{Amphibia:"Amphibiens",Aves:"Oiseaux",Insecta:"Insectes",Mammalia:"Mammifères",Reptilia:"Reptiles",Plantae:"Plantes",Fungi:"Champignons","All biodiversity":"Toute la biodiversité"},
+    group:{Amphibia:"Amphibiens",Aves:"Oiseaux",Insecta:"Insectes",Mammalia:"Mammifères",Reptilia:"Reptiles",Plantae:"Plantes",Fungi:"Champignons",Actinopterygii:"Poissons",Arachnida:"Arachnides",Mollusca:"Mollusques","All biodiversity":"Toute la biodiversité"},
     modes:{Walk:"Marche",Cycle:"Vélo",Drive:"Voiture"},
   }
 };
@@ -532,7 +532,7 @@ const MODES={Walk:{host:'routed-foot',kmh:5,emit:0,icon:'🚶'},Cycle:{host:'rou
 const UNITS={Minutes:{toH:1/60,min:15,max:600,step:15,def:120},Hours:{toH:1,min:1,max:14,step:0.5,def:5},Days:{toH:24,min:1,max:21,step:1,def:2}};
 const ROAD_FACTOR=1.35, MIN_FIELD_H=0.5, N_CANDIDATES=8;
 function co2lbl(kg){return kg<=0?t('car_free'):'~'+(kg<10?kg.toFixed(1):Math.round(kg))+' kg CO₂';}
-const ICONIC={Amphibia:'Amphibia',Aves:'Aves',Insecta:'Insecta',Mammalia:'Mammalia',Reptilia:'Reptilia',Plantae:'Plantae',Fungi:'Fungi'};
+const ICONIC={Amphibia:'Amphibia',Aves:'Aves',Insecta:'Insecta',Mammalia:'Mammalia',Reptilia:'Reptilia',Plantae:'Plantae',Fungi:'Fungi',Actinopterygii:'Actinopterygii',Arachnida:'Arachnida',Mollusca:'Mollusca'};
 let prospectSeq=0;
 // whereKey is a stable sentinel ('around_start'|'right_here'|'destination'); the displayed
 // heading is translated from it so the gap-popup test stays language-independent.
@@ -741,7 +741,7 @@ const bmSel=document.getElementById('basemap');
 Object.keys(BASEMAPS).forEach(n=>{const o=document.createElement('option');o.value=o.textContent=n;bmSel.appendChild(o);});
 bmSel.value='Light & muted'; bmSel.onchange=()=>setBase(bmSel.value);
 let covLayer=null;
-const COVTAXA={Plantae:'Plantae',Aves:'Aves',Mammalia:'Mammalia',Insecta:'Insecta',Amphibia:'Amphibia'};   // COGs available per taxon (others -> All)
+const COVTAXA={Plantae:'Plantae',Aves:'Aves',Mammalia:'Mammalia',Insecta:'Insecta',Amphibia:'Amphibia',Fungi:'Fungi',Reptilia:'Reptilia',Actinopterygii:'Actinopterygii',Arachnida:'Arachnida',Mollusca:'Mollusca'};   // COGs available per taxon (others -> All)
 function setCoverage(){
   if(covLayer){map.removeLayer(covLayer);covLayer=null;}
   if(!document.getElementById('tgCoverage').checked)return;
