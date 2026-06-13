@@ -148,6 +148,12 @@ details.adv>summary:hover{color:var(--ink)}
   #viewtoggle{left:50%;top:auto;bottom:12px}
   #insights{left:0;top:0;height:100%;padding:54px 12px 24px}
 }
+#maplegend{position:fixed;bottom:14px;left:372px;z-index:1050;background:rgba(255,255,255,.93);border-radius:9px;padding:8px 11px;box-shadow:0 2px 10px rgba(0,0,0,.22);font-size:12px;color:#16233a;max-width:212px;line-height:1.3}
+#maplegend .lt{font-weight:700;font-size:12.5px}
+#maplegend .ramp{height:9px;border-radius:5px;background:linear-gradient(90deg,#f7fcf5,#c7e9c0,#74c476,#238b45,#00441b);margin:4px 0 2px}
+#maplegend .lab{display:flex;justify-content:space-between;font-size:10.5px;color:#5a6b7a}
+#maplegend .hint{margin-top:4px;color:#5a6b7a;font-size:10.5px}
+@media(max-width:640px){#maplegend{left:8px;bottom:auto;top:calc(50vh + 8px);max-width:158px;padding:6px 8px}}
 </style></head>
 <body><div id="app">
 <div id="panel">
@@ -242,6 +248,7 @@ details.adv>summary:hover{color:var(--ink)}
 </div>
 <div id="map"></div>
 <div id="viewtoggle"><button id="vexplore" class="on">🗺 Explore</button><button id="vplan">🧭 Plan a trip</button><button id="vcompare">📊 Compare goals</button></div>
+<div id="maplegend"><div class="lt">Where to blitz</div><div class="ramp"></div><div class="lab"><span>well-sampled</span><span>biggest gaps</span></div><div class="hint">Darker = higher priority. Tap a cell to see what to record.</div></div>
 <div id="insights"></div>
 </div>
 
@@ -654,6 +661,7 @@ function exploreCell(lat,lon){
 function setView(v){
   state.view=v;
   document.getElementById('insights').style.display=v==='compare'?'block':'none';
+  const ml=document.getElementById('maplegend');if(ml)ml.style.display=v==='compare'?'none':'block';
   document.getElementById('tripui').style.display=v==='plan'?'':'none';
   document.getElementById('vexplore').classList.toggle('on',v==='explore');
   document.getElementById('vplan').classList.toggle('on',v==='plan');
