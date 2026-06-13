@@ -24,7 +24,7 @@ OBJ = [
 PRESETS = [
     {"name": "Biodiversity impact", "w": [0.8, 0.2, 0.8, 0.4, 0.2], "proj": "blitz-the-gap-2026-general",         "blurb": "Under-sampling + climate gaps — the strongest signal nationwide."},
     {"name": "The Other 99%",       "w": [1, 0, 0.3, 0.2, 0],       "proj": "blitz-the-gap-the-other-99",          "blurb": "Skip the busy 1% — record in Canada's under-sampled 99%."},
-    {"name": "Most Wanted",         "w": [0.1, 1, 0, 0, 0.3],       "proj": "blitz-the-gap-canada-s-most-wanted",  "blurb": "Areas rich in range-restricted, at-risk species."},
+    {"name": "Most Wanted",         "w": [0.1, 1, 0, 0, 0.3],       "proj": "blitz-the-gap-canada-s-most-wanted",  "blurb": "Range-restricted, at-risk species — national rarity layer still in progress."},
     {"name": "Too Hot to Handle",   "w": [0.2, 0.4, 0.2, 0, 1],     "proj": "blitz-the-gap-too-hot-to-handle",     "blurb": "Climate-exposed species in the fastest-warming areas."},
     {"name": "Climate Gap",         "w": [0.2, 0, 1, 0.2, 0],       "proj": "blitz-the-gap-closing-the-climate-gap","blurb": "Visit under-sampled climate & habitat types."},
     {"name": "Revisit the Past",    "w": [0.3, 0.2, 0, 1, 0],       "proj": "blitz-the-gap-revisiting-the-past",   "blurb": "Re-find species not recorded in a cell for years."},
