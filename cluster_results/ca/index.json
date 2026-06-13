@@ -57,5 +57,7 @@
     "Fungi": "All",
     "All biodiversity": "All"
   },
-  "land_mask": "Natural Earth 50m admin_0; kept Canada + United States land; dropped ocean (Hudson/Baffin Bay) + Greenland"
+  "land_mask": "Natural Earth 50m admin_0; kept Canada + United States land; dropped ocean (Hudson/Baffin Bay) + Greenland",
+  "discover_method": "under-sampling rank (fewer obs=higher); zero-obs ties broken by climate distinctiveness (env). Replaces saturating norm(1/density).",
+  "staleness_method": "proxy = de-saturated discover (no national per-record dates); down-weighted in national presets"
 }
