@@ -81,6 +81,7 @@ input[type=range]{width:100%;accent-color:var(--acc);margin:0}
 .prospects .sp .ct{font-size:11.5px;color:var(--mut)}
 .prospects .rare{background:var(--gold);color:#3a2a00;font-size:10.5px;font-weight:700;padding:0 4px;border-radius:6px;white-space:nowrap}
 .prospects .unc{background:#33465a;color:#cfe0ee;font-size:10.5px;font-weight:700;padding:0 4px;border-radius:6px;white-space:nowrap}
+.prospects .first{background:var(--gd);color:#04220f;font-size:10.5px;font-weight:700;padding:0 4px;border-radius:6px;white-space:nowrap}
 .legend{display:flex;align-items:center;gap:8px;margin-top:8px;font-size:13px;color:var(--mut)}
 .bar{height:11px;flex:1;border-radius:6px;background:linear-gradient(90deg,#f7fcf5,#e5f5e0,#c7e9c0,#a1d99b,#74c476,#41ab5d,#238b45,#006d2c,#00441b)}
 .foot{color:var(--mut);font-size:12.5px;line-height:1.5;margin-top:8px}
@@ -216,13 +217,16 @@ const ROAD_FACTOR=1.35, MIN_FIELD_H=0.5, N_CANDIDATES=8;
 function co2lbl(kg){return kg<=0?'car-free 🌿':'~'+(kg<10?kg.toFixed(1):Math.round(kg))+' kg CO₂';}
 const ICONIC={Amphibia:'Amphibia',Aves:'Aves',Insecta:'Insecta',Mammalia:'Mammalia',Reptilia:'Reptilia',Plantae:'Plantae',Fungi:'Fungi'};
 const TAXLBL={Amphibia:'Amphibians',Aves:'Birds',Insecta:'Insects',Mammalia:'Mammals',Reptilia:'Reptiles',Plantae:'Plants',Fungi:'Fungi','All biodiversity':'All biodiversity'};
+let prospectSeq=0;
 async function fetchProspects(lat,lon,where){
+  const myseq=++prospectSeq;
   const pr=document.getElementById('prospects'); pr.innerHTML='<div class="hd">🔭 Looking up what lives here…</div>';
   const ic=ICONIC[state.taxon]||'', HH=0.125;
-  const q=(h)=>`https://api.inaturalist.org/v1/observations/species_counts?swlat=${lat-h}&nelat=${lat+h}&swlng=${lon-h}&nelng=${lon+h}&quality_grade=research&per_page=100&order_by=count`+(ic?`&iconic_taxa=${ic}`:'');
+  const q=(h)=>`https://api.inaturalist.org/v1/observations/species_counts?swlat=${lat-h}&nelat=${lat+h}&swlng=${lon-h}&nelng=${lon+h}&quality_grade=research&per_page=200&order_by=count`+(ic?`&iconic_taxa=${ic}`:'');
   try{
     const j=await fetch(q(HH)).then(r=>r.json());
     const total=j.total_results||0;
+    const cellIds=new Set((j.results||[]).map(r=>r.taxon&&r.taxon.id).filter(Boolean));   // everything already logged in this cell
     let res=(j.results||[]).filter(r=>r.count>=2 && r.taxon && r.taxon.default_photo).map(r=>({count:r.count,taxon:r.taxon,_here:true}));
     let nearby=false;
     if(res.length<4){
@@ -238,13 +242,28 @@ async function fetchProspects(lat,lon,where){
     const ex=`https://www.inaturalist.org/observations?subview=map&swlat=${lat-HH}&nelat=${lat+HH}&swlng=${lon-HH}&nelng=${lon+HH}&quality_grade=research`;
     pr.innerHTML=`<div class="hd">🔭 <b style="color:var(--ink)">${where||'Here'}</b> · ${total.toLocaleString()} species recorded. Keep an eye out for${nearby?' (✦ = nearby)':''}:</div>`+
       '<div class="prospects">'+res.map(r=>{const t=r.taxon,g=t.observations_count||0,rare=g<1500,unc=g<7000;
-        return `<a class="sp" href="https://www.inaturalist.org/taxa/${t.id}" target="_blank" rel="noopener" title="${t.name}"><img src="${t.default_photo.square_url}" loading="lazy" alt=""><div class="nm">${r._here?'':'✦ '}${t.preferred_common_name||t.name}${rare?' <span class="rare">rare</span>':(unc?' <span class="unc">uncommon</span>':'')}</div><div class="ct">${r._here?r.count+' here':'nearby'} · ${g.toLocaleString()} worldwide</div></a>`;}).join('')+'</div>'+
+        return `<a class="sp" href="https://www.inaturalist.org/taxa/${t.id}" target="_blank" rel="noopener" title="${t.name}"><img src="${t.default_photo.square_url}" loading="lazy" alt=""><div class="nm">${r._here?'':'✦ '}${t.preferred_common_name||t.name}${rare?' <span class="rare">rare</span>':(unc?' <span class="unc">uncommon</span>':'')}</div><div class="ct">${r._here?r.count+' here':'nearby'} · ${g.toLocaleString()} worldwide</div></a>`;}).join('')+'</div>'+'<div id="firsts"></div>'+
       `<div style="margin-top:7px;font-size:11.5px"><a href="${ex}" target="_blank" rel="noopener" style="color:var(--acc)">Explore all on iNaturalist →</a> &nbsp;·&nbsp; <a href="https://www.inaturalist.org/observations/new" target="_blank" rel="noopener" style="color:var(--gd)">＋ Log a sighting</a> &nbsp;·&nbsp; <a href="https://www.inaturalist.org/projects/blitz-the-gap-2026-general" target="_blank" rel="noopener" style="color:var(--mut)">for Blitz the Gap</a></div>`;
     if(where==='Your destination' && destMarker && destMarker.getPopup()){
       const thumbs='<div style="font-size:11px;color:#557;margin:9px 0 4px">Recorded in this area — tap a photo for details:</div><div style="display:flex;gap:6px">'+res.slice(0,4).map(r=>{const t=r.taxon,nm=t.preferred_common_name||t.name;return `<a href="https://www.inaturalist.org/taxa/${t.id}" target="_blank" rel="noopener" style="width:62px;text-decoration:none;color:#0a2a44" title="${t.name} — open on iNaturalist"><img src="${t.default_photo.square_url}" style="width:62px;height:62px;object-fit:cover;border-radius:7px;border:1px solid #cdd;display:block"><div style="font-size:10px;line-height:1.15;margin-top:3px;height:24px;overflow:hidden">${nm}</div></a>`;}).join('')+'</div>';
       destMarker.setPopupContent(destMarker.getPopup().getContent()+thumbs); destMarker.openPopup();
     }
+    // "Fill the gap": species recorded in the ~50 km neighbourhood but with no research-grade
+    // record in THIS cell. Honest, records-based -- not a claim about true presence/absence.
+    const firsts=await fetchFirsts(lat,lon,ic,cellIds);
+    const fe=document.getElementById('firsts');
+    if(myseq===prospectSeq && fe && firsts.length){
+      fe.innerHTML=`<div class="hd" style="margin-top:11px">🎯 <b style="color:var(--ink)">Fill the gap</b> — common nearby, no record in this cell yet:</div>`+
+        '<div class="prospects">'+firsts.map(r=>{const t=r.taxon;return `<a class="sp" href="https://www.inaturalist.org/taxa/${t.id}" target="_blank" rel="noopener" title="${t.name} — recorded nearby but not in this cell; a gap to fill"><img src="${t.default_photo.square_url}" loading="lazy" alt=""><div class="nm">${t.preferred_common_name||t.name} <span class="first">new here</span></div><div class="ct">${r.count.toLocaleString()} nearby</div></a>`;}).join('')+'</div>';
+    }
   }catch(e){pr.innerHTML='<div class="hd">🔭 Couldn’t load species for this spot.</div>';}
+}
+async function fetchFirsts(lat,lon,ic,cellIds){
+  const R=0.5;   // ~50 km neighbourhood -- same habitat zone, not a different ecoregion
+  const u=`https://api.inaturalist.org/v1/observations/species_counts?swlat=${lat-R}&nelat=${lat+R}&swlng=${lon-R}&nelng=${lon+R}&quality_grade=research&per_page=100&order_by=count`+(ic?`&iconic_taxa=${ic}`:'');
+  try{const j=await fetch(u).then(r=>r.json());
+    return (j.results||[]).filter(r=>r.taxon&&r.taxon.default_photo&&!cellIds.has(r.taxon.id)&&(r.taxon.observations_count||0)>40).slice(0,6);
+  }catch(e){return [];}
 }
 const showProspects=debounce((lat,lon)=>fetchProspects(lat,lon,'Around your start'),500);
 
