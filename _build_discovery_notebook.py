@@ -311,7 +311,12 @@ the embedding earns its keep only when it separates species *better than locatio
 generic embeddings failed** — Arachnida +0.168 (0.453→0.622), Insecta +0.237. That is the mechanism behind the
 Arachnida rescue: domain-match raises separability where the generic backbone was deficient. (Cross-taxon, raw
 separability still doesn't linearly predict the benefit — separability falls as richness rises while benefit rises,
-so the benefit *magnitude* is richness-driven, the *sign/rescue* is domain-match.)""")
+so the benefit *magnitude* is richness-driven, the *sign/rescue* is domain-match.)
+
+And the loop closes cleanly: **for BioCLIP, embedding separability exceeds *geographic* separability on all 8 taxa**
+(margin +0.25 to +0.56) — it out-separates geography everywhere, consistent with winning everywhere. (The same
+emb>geo comparison was unreliable for generic DINOv2 — Arachnida had emb>geo yet lost — so this is descriptive
+consistency for a domain-matched embedding, not a universal predictor.)""")
 
 co(r"""import json, pandas as pd
 s = json.load(open('cluster_results/generalization/separability_dinov2.json'))
