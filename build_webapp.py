@@ -112,6 +112,16 @@ input[type=range]{width:100%;accent-color:var(--acc);margin:0}
 .prospects .rare{background:var(--gold);color:#3a2a00;font-size:10.5px;font-weight:700;padding:0 4px;border-radius:6px;white-space:nowrap}
 .prospects .unc{background:#33465a;color:#cfe0ee;font-size:10.5px;font-weight:700;padding:0 4px;border-radius:6px;white-space:nowrap}
 .prospects .first{background:var(--gd);color:#04220f;font-size:10.5px;font-weight:700;padding:0 4px;border-radius:6px;white-space:nowrap}
+.gaptree{display:flex;flex-direction:column;gap:5px;margin-top:6px}
+.gtrow{display:grid;grid-template-columns:80px 1fr auto;align-items:center;gap:9px;background:#0e1722;border:1px solid #2a3a4d;border-radius:7px;padding:6px 9px;cursor:pointer;text-align:left;color:var(--ink);font:inherit}
+.gtrow:hover,.gtrow:focus-visible{border-color:var(--acc);outline:none}
+.gtn{font-weight:700;font-size:12.5px}
+.gtbar{height:8px;background:#1b2a3a;border-radius:5px;overflow:hidden}
+.gtbar>span{display:block;height:100%}
+.gtc{font-size:11px;color:var(--mut);white-space:nowrap}
+.gtrow.gt-gap .gtbar>span{background:#d98a2b}
+.gtrow.gt-part .gtbar>span{background:var(--gold)}
+.gtrow.gt-ok .gtbar>span{background:var(--gd)}
 #searchResults{position:absolute;left:0;right:0;top:100%;z-index:1000;background:#0e1722;border:1px solid #2a3a4d;border-radius:7px;margin-top:2px;overflow:hidden;display:none;box-shadow:0 4px 14px rgba(0,0,0,.4)}
 #searchResults.open{display:block}
 #searchResults .res{padding:8px 10px;cursor:pointer;font-size:13px;line-height:1.3;border-bottom:1px solid #1a2735}
@@ -183,7 +193,7 @@ details.adv>summary:hover{color:var(--ink)}
 #loading{position:fixed;left:calc(360px + (100% - 360px)/2);top:46%;transform:translate(-50%,-50%);z-index:1200;background:rgba(255,255,255,.96);border-radius:10px;padding:11px 17px;box-shadow:0 3px 14px rgba(0,0,0,.25);font-size:14px;font-weight:600;color:#1b2a3a}
 @media(max-width:640px){#loading{left:50%;top:74vh}}
 </style></head>
-<body><div id="protobar"><span data-i18n="proto_banner">⚠ Work in progress, not an official Blitz the Gap tool</span><button id="protox" type="button" aria-label="Dismiss notice" title="Dismiss">×</button></div><div id="app">
+<body><div id="protobar" role="region" aria-label="Site notice"><span data-i18n="proto_banner">⚠ Work in progress, not an official Blitz the Gap tool</span><button id="protox" type="button" aria-label="Dismiss notice" title="Dismiss">×</button></div><div id="app">
 <div id="panel" role="main">
   <div class="langtoggle" role="group" aria-label="Language"><button id="lang-en" type="button">EN</button><button id="lang-fr" type="button">FR</button></div>
   <h1 data-i18n-html="title_full">Where to <a href="https://blitzthegap.org" target="_blank" rel="noopener" style="color:var(--gd);text-decoration:underline">Blitz the Gap</a></h1>
@@ -255,6 +265,7 @@ details.adv>summary:hover{color:var(--ink)}
   <div id="trips"></div>
   </div>
   <div id="prospects" data-idle="1"><div class="hd" style="margin-top:10px" data-i18n="prospects_idle">🔭 Tap a cell (or plan a trip) to see what to record there.</div></div>
+  <div id="gaptree"></div>
 
   <details class="adv"><summary data-i18n="map_style">Map style</summary>
     <select id="basemap" class="full" aria-label="Map style" style="margin-top:4px"></select>
@@ -329,6 +340,12 @@ const I18N={
     startprosp:"🔭 Also show species around my start",
     plan_trip:"Plan my trip →",
     prospects_idle:"🔭 Tap a cell (or plan a trip) to see what to record there.",
+    gaptree_lookup:"🌿 Reading taxonomic coverage…",
+    gaptree_hd:"🌿 Coverage by group here — biggest gaps first",
+    gt_gap:"gap", gt_partial:"partial", gt_ok:"well recorded",
+    gt_count:(c,n)=>`${c} of ~${n} nearby`,
+    gt_switch:(g)=>`Switch the map to ${g}`,
+    gaptree_foot:"Each group's recording here, judged against how thoroughly the whole cell is recorded, so the biggest relative gaps surface even where everything is under-recorded. Counts are distinct research-grade iNaturalist species in this cell vs the ~50 km around. Tap a group to map it.",
     map_style:"Map style",
     roads:"Roads", labels_places:"Labels & places",
     vector_hint:"Vector basemap — toggle layers like Maputnik. Other styles are raster (roads baked in).",
@@ -453,6 +470,12 @@ const I18N={
     startprosp:"🔭 Montrer aussi les espèces près de mon départ",
     plan_trip:"Planifier ma sortie →",
     prospects_idle:"🔭 Touchez une cellule (ou planifiez une sortie) pour voir quoi observer.",
+    gaptree_lookup:"🌿 Lecture de la couverture taxonomique…",
+    gaptree_hd:"🌿 Couverture par groupe ici — plus grandes lacunes d’abord",
+    gt_gap:"lacune", gt_partial:"partielle", gt_ok:"bien documenté",
+    gt_count:(c,n)=>`${c} sur ~${n} à proximité`,
+    gt_switch:(g)=>`Afficher ${g} sur la carte`,
+    gaptree_foot:"L’enregistrement de chaque groupe dans cette cellule, évalué selon la couverture globale de la cellule, pour faire ressortir les plus grandes lacunes relatives même là où tout est sous-documenté. Les nombres sont des espèces iNaturalist de qualité recherche distinctes ici vs les ~50 km autour. Touchez un groupe pour l’afficher.",
     map_style:"Style de carte",
     roads:"Routes", labels_places:"Étiquettes et lieux",
     vector_hint:"Fond vectoriel — activez les couches comme dans Maputnik. Les autres styles sont matriciels (routes intégrées).",
@@ -624,6 +647,8 @@ async function fetchProspects(lat,lon,whereKey){
   const myseq=++prospectSeq;
   const where=t(WHERE_LBL[whereKey]||'here');
   const pr=document.getElementById('prospects'); pr.dataset.idle='0'; pr.innerHTML='<div class="hd">'+t('prospects_lookup')+'</div>';
+  const _gt=document.getElementById('gaptree'); if(_gt) _gt.innerHTML='';
+  if(whereKey==='right_here'||whereKey==='destination') fetchGapTree(lat,lon);
   // labels needed inside taxon-shadowed (.map(r=>{const t=r.taxon...})) closures
   const L_rare=t('rare'),L_unc=t('uncommon'),L_gap=t('gap'),L_nearby=t('nearby_lbl');
   const T_here=n=>t('here_count',n),T_world=g=>t('worldwide',g.toLocaleString(LANG==='fr'?'fr-CA':'en-CA')),T_nb=n=>t('nearby_count',n);
@@ -687,6 +712,42 @@ async function fetchFirsts(lat,lon,ic,cellIds,cellN){
   }catch(e){return {list:[],M:0,cellN:0};}
 }
 const showProspects=debounce((lat,lon)=>fetchProspects(lat,lon,'around_start'),500);
+// Per-cell taxonomic-coverage tree: distinct research-grade iNat species recorded in this cell
+// per iconic group vs the ~50km neighbourhood. A group rich nearby but sparse here = a real
+// recording gap. iconic_taxon_name == the app's group keys, so rows switch the map on click.
+let gapSeq=0;
+async function fetchGapTree(lat,lon){
+  const myseq=++gapSeq;
+  const el=document.getElementById('gaptree'); if(!el) return;
+  el.innerHTML='<div class="hd" style="margin-top:11px">'+t('gaptree_lookup')+'</div>';
+  const HH=0.125,R=0.5,GR=t('group'),groups=Object.keys(ICONIC);
+  const box=(h)=>`swlat=${lat-h}&nelat=${lat+h}&swlng=${lon-h}&nelng=${lon+h}`;
+  const base='https://api.inaturalist.org/v1/observations/species_counts?quality_grade=research&taxon_geoprivacy=open&order_by=count';
+  try{
+    // cell numerator: one uncapped page aggregated by group; neighbourhood denominator:
+    // accurate distinct-species count per group via total_results (per_page page-cap would
+    // truncate rich groups and make cell>nbhd, so query each group's true total separately).
+    const cellP=fetchT(`${base}&${box(HH)}&per_page=500`).then(r=>r.json());
+    const nbP=Promise.all(groups.map(g=>fetchT(`${base}&${box(R)}&iconic_taxa=${g}&per_page=1`).then(r=>r.json()).then(j=>[g,j.total_results||0]).catch(()=>[g,0])));
+    const [cj,nbArr]=await Promise.all([cellP,nbP]);
+    if(myseq!==gapSeq)return;
+    const cell={};(cj.results||[]).forEach(r=>{const g=r.taxon&&r.taxon.iconic_taxon_name;if(g)cell[g]=(cell[g]||0)+1;});
+    const nbhd=Object.fromEntries(nbArr);
+    const elig=groups.filter(g=>nbhd[g]>=3&&GR[g]);
+    let sumC=0,sumN=0;elig.forEach(g=>{sumC+=Math.min(cell[g]||0,nbhd[g]);sumN+=nbhd[g];});
+    const rate=sumC>0?sumC/sumN:0;   // this cell's overall coverage rate; normalise so an avg group sits at 1
+    const rows=elig.map(g=>{const c=Math.min(cell[g]||0,nbhd[g]);return{g,c,n:nbhd[g],cov:rate>0?(c/nbhd[g])/rate:0};}).sort((a,b)=>a.cov-b.cov);
+    if(myseq!==gapSeq)return;
+    if(!rows.length){el.innerHTML='';return;}
+    const lab=v=>v<0.2?t('gt_gap'):(v<0.6?t('gt_partial'):t('gt_ok'));
+    const cls=v=>v<0.2?'gt-gap':(v<0.6?'gt-part':'gt-ok');
+    el.innerHTML='<div class="hd" style="margin-top:11px">'+t('gaptree_hd')+'</div>'+
+      '<div class="gaptree">'+rows.map(r=>{const pct=Math.round(Math.min(1,r.cov)*100);
+        return `<button class="gtrow ${cls(r.cov)}" data-g="${esc(r.g)}" aria-label="${esc(groupName(r.g))}: ${t('gt_count',r.c,r.n)}, ${lab(r.cov)}. ${t('gt_switch',groupName(r.g))}"><span class="gtn">${esc(groupName(r.g))}</span><span class="gtbar"><span style="width:${pct}%"></span></span><span class="gtc">${t('gt_count',r.c,r.n)} · ${lab(r.cov)}</span></button>`;}).join('')+'</div>'+
+      '<div style="margin-top:6px;font-size:10.5px;color:var(--mut);line-height:1.35">'+t('gaptree_foot')+'</div>';
+    el.querySelectorAll('.gtrow').forEach(b=>b.onclick=()=>{const g=b.dataset.g;if(!FILES[g]||state.taxon===g)return;taxonSel.value=g;taxonSel.onchange();});
+  }catch(e){el.innerHTML='';}
+}
 
 const RAMP=[[255,255,217],[237,248,177],[199,233,180],[127,205,187],[65,182,196],[29,145,192],[34,94,168],[37,52,148],[8,29,88]]; // YlGnBu (ColorBrewer, CVD-safe): pale yellow=well-sampled, dark navy=biggest gaps
 function colour(t){t=Math.max(0,Math.min(1,t));const x=t*(RAMP.length-1),i=Math.floor(x),f=x-i;const a=RAMP[i],b=RAMP[Math.min(i+1,RAMP.length-1)];return `rgb(${Math.round(a[0]+(b[0]-a[0])*f)},${Math.round(a[1]+(b[1]-a[1])*f)},${Math.round(a[2]+(b[2]-a[2])*f)})`;}
