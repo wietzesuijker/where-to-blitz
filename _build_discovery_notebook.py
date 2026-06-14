@@ -305,7 +305,13 @@ the embedding earns its keep only when it separates species *better than locatio
   emb−geo gap yet a negative DINOv2 benefit, so two separability-based mechanisms (embedding-quality,
   geography-out-separates) were tested and **refuted** here. The anomaly is instead resolved one section up by the
   **BioCLIP** run (+19.78): it was domain-mismatch — which a *generic*-embedding separability cannot measure. The
-  refuted separability story is kept, not hidden, because it's what pointed to the domain-match explanation.""")
+  refuted separability story is kept, not hidden, because it's what pointed to the domain-match explanation.
+
+**Capstone:** BioCLIP raises 1-NN species separability for *every* taxon, and **most for exactly the arthropod taxa
+generic embeddings failed** — Arachnida +0.168 (0.453→0.622), Insecta +0.237. That is the mechanism behind the
+Arachnida rescue: domain-match raises separability where the generic backbone was deficient. (Cross-taxon, raw
+separability still doesn't linearly predict the benefit — separability falls as richness rises while benefit rises,
+so the benefit *magnitude* is richness-driven, the *sign/rescue* is domain-match.)""")
 
 co(r"""import json, pandas as pd
 s = json.load(open('cluster_results/generalization/separability_dinov2.json'))
