@@ -13,3 +13,6 @@ cluster_results/inat_*.csv
 
 # claude-flow runtime/session state
 .claude-flow/
+
+# local embedding cache for offline strategy sweeps (regenerable)
+local_cache/

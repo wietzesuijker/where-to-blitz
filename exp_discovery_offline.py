@@ -1,10 +1,28 @@
-"""BTG species-discovery experiment — offline GPU version.
+"""BTG species-discovery experiment — offline version (design-04's no-free-lunch test).
 
-Modifications vs exp_discovery_acquisition.py:
-- Accepts --image-cache dir: if set, load images from disk instead of fetching URLs.
-- Staging mode (--stage-only): pull observations + download all photos to --image-cache,
-  save obs JSON, then exit. Run this on the login node.
-- GPU mode (--obs-cache <json>): load saved obs JSON + images from cache, embed on GPU.
+Question: does embedding-based acquisition beat simple spatial coverage at
+discovering distinct amphibian species (iNaturalist 228908, real Canada data)?
+
+Modes
+-----
+- Staging (--stage-only): pull observations + download photos to --image-cache,
+  save obs JSON, then exit. Run on a login node (needs internet).
+- Run (--obs-cache <json> [--image-cache <dir>]): load saved obs + cached images,
+  embed (GPU or CPU), simulate active discovery under several acquisition
+  strategies, report discovery curves with paired significance tests.
+
+Embeddings are cached to <image-cache>/emb_<backbone>.npz, so re-running the
+strategy sweep (the cheap part) needs neither a GPU nor the images — only numpy.
+
+Strategies
+----------
+- random              : uniform sampling (the floor).
+- spatial_coverage    : greedy k-center in geographic space (haversine distance).
+- embedding_novelty   : greedy k-center in embedding space (= CoreSet; outlier-prone).
+- embedding_kmeanspp  : D^2-weighted probabilistic coverage (robust to outliers).
+- combined            : z-scored spatial + embedding min-distance (the multi-axis app).
+
+Every claim is a measured number with seeds and a paired permutation test.
 """
 from __future__ import annotations
 import argparse, io, json, os, time, urllib.request
@@ -81,31 +99,50 @@ def fetch_image_from_url(url: str):
         return Image.open(io.BytesIO(r.read())).convert("RGB")
 
 
-def embed_images(records, device, batch=64, use_cache=True):
-    """Vision embeddings on GPU. Loads from local_path if available, else fetches URL."""
+# ---- backbones -------------------------------------------------------------
+def _load_dinov2(device):
+    import torch, torchvision.transforms as T
+    model = torch.hub.load("facebookresearch/dinov2", "dinov2_vits14").to(device).eval()
+    tf = T.Compose([T.Resize(224), T.CenterCrop(224), T.ToTensor(),
+                    T.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])])
+    return model, tf, "dinov2_vits14"
+
+def _load_resnet50(device):
+    import torch, torchvision
+    from torchvision.models import ResNet50_Weights
+    w = ResNet50_Weights.IMAGENET1K_V2
+    m = torchvision.models.resnet50(weights=w); m.fc = torch.nn.Identity()
+    return m.to(device).eval(), w.transforms(), "resnet50_imagenet"
+
+def _load_clip(device):
+    import open_clip
+    model, _, preprocess = open_clip.create_model_and_transforms(
+        "ViT-B-32", pretrained="laion2b_s34b_b79k")
+    model = model.to(device).eval()
+    class _Vis:
+        def __call__(self, x):
+            return model.encode_image(x)
+    return _Vis(), preprocess, "clip_vit_b32"
+
+
+def embed_images(records, device, want="auto", batch=64, use_cache=True):
+    """Vision embeddings. Loads images from local_path if present, else fetches URL."""
     import torch
-    from PIL import Image
-    backbone = None
-    try:
-        model = torch.hub.load("facebookresearch/dinov2", "dinov2_vits14").to(device).eval()
-        backbone = "dinov2_vits14"
-        import torchvision.transforms as T
-        tf = T.Compose([T.Resize(224), T.CenterCrop(224), T.ToTensor(),
-                        T.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])])
-        def encode(batch_t):
-            return model(batch_t)
-    except Exception as e:
-        print(f"[embed] DINOv2 unavailable ({e}); falling back to torchvision ResNet50")
-        import torchvision
-        from torchvision.models import ResNet50_Weights
-        w = ResNet50_Weights.IMAGENET1K_V2
-        m = torchvision.models.resnet50(weights=w)
-        m.fc = torch.nn.Identity()
-        model = m.to(device).eval()
-        backbone = "resnet50_imagenet"
-        tf = w.transforms()
-        def encode(batch_t):
-            return model(batch_t)
+    order = {"auto": ["dinov2", "resnet50"], "dinov2": ["dinov2"],
+             "resnet50": ["resnet50"], "clip": ["clip", "resnet50"]}[want]
+    loaders = {"dinov2": _load_dinov2, "resnet50": _load_resnet50, "clip": _load_clip}
+    model = tf = backbone = None
+    for name in order:
+        try:
+            model, tf, backbone = loaders[name](device)
+            break
+        except Exception as e:
+            print(f"[embed] {name} unavailable ({e}); trying next")
+    if model is None:
+        raise RuntimeError("no usable backbone")
+
+    def encode(batch_t):
+        return model(batch_t)
 
     embs, keep = [], []
     buf, idxs = [], []
@@ -113,7 +150,6 @@ def embed_images(records, device, batch=64, use_cache=True):
     def flush():
         if not buf:
             return
-        import torch
         with torch.no_grad():
             x = torch.stack(buf).to(device)
             z = encode(x).float().cpu().numpy()
@@ -141,38 +177,96 @@ def embed_images(records, device, batch=64, use_cache=True):
     return E, keep, backbone
 
 
-def discover(order_fn, recs, E, seed, budget):
+# resolved backbone name per --backbone choice (cache files are keyed by this).
+ARG_TO_BACKBONE = {"dinov2": "dinov2_vits14", "resnet50": "resnet50_imagenet",
+                   "clip": "clip_vit_b32"}
+
+# ---- discovery simulation --------------------------------------------------
+STRATEGIES = ("random", "spatial_coverage", "spatial_coverage_raw",
+              "embedding_novelty", "embedding_kmeanspp", "combined")
+
+
+def _haversine_to(lat_rad, lon_rad, j):
+    """Great-circle angular distance from point j to all points (radians ×R=1)."""
+    dlat = lat_rad - lat_rad[j]
+    dlon = lon_rad - lon_rad[j]
+    a = np.sin(dlat / 2) ** 2 + np.cos(lat_rad) * np.cos(lat_rad[j]) * np.sin(dlon / 2) ** 2
+    return 2.0 * np.arcsin(np.sqrt(np.clip(a, 0.0, 1.0)))
+
+
+def _zscore_masked(x, mask):
+    """z-score values of x over the masked (candidate) subset; non-candidates -> -inf."""
+    vals = x[mask]
+    mu = vals.mean()
+    sd = vals.std()
+    z = (x - mu) / sd if sd > 1e-12 else np.zeros_like(x)
+    out = np.full_like(x, -np.inf)
+    out[mask] = z[mask]
+    return out
+
+
+def _raw_latlon_to(lat, lon, j):
+    """OLD (distorted) baseline: raw lat/lon Euclidean in degrees. Kept only as a
+    control to isolate the effect of the geographic-distance fix on identical data."""
+    return np.sqrt((lat - lat[j]) ** 2 + (lon - lon[j]) ** 2)
+
+
+def run_discovery(kind, lat, lon, E, species_ids, seed, budget):
+    """One discovery run. Returns the species-accumulation curve (len = #sampled).
+
+    ``lat``/``lon`` are degrees. Incremental O(budget*n): maintain running min-distance
+    to the seen set rather than recomputing the full pairwise matrix at every step. For a
+    given seed the start point is the first RNG draw -> identical across strategies, so the
+    per-seed species@budget values are *paired* across strategies (valid paired tests).
+    """
+    lat_rad = np.radians(lat); lon_rad = np.radians(lon)
     rng = np.random.default_rng(seed)
-    n = len(recs)
+    n = len(species_ids)
+    NEG = -np.inf
     start = int(rng.integers(n))
-    seen = [start]
-    seen_species = {recs[start]["species"]}
+    seen = np.zeros(n, dtype=bool); seen[start] = True
+    seen_species = {species_ids[start]}
     curve = [1]
-    remaining = set(range(n)) - {start}
-    while remaining and len(seen) < budget:
-        nxt = order_fn(seen, remaining, recs, E, rng)
-        remaining.discard(nxt)
-        seen.append(nxt)
-        seen_species.add(recs[nxt]["species"])
+
+    need_geo = kind in ("spatial_coverage", "combined")
+    need_geo_raw = kind == "spatial_coverage_raw"
+    need_emb = kind in ("embedding_novelty", "embedding_kmeanspp", "combined")
+    mind_geo = _haversine_to(lat_rad, lon_rad, start) if need_geo else None
+    mind_geo_raw = _raw_latlon_to(lat, lon, start) if need_geo_raw else None
+    mind_emb = (1.0 - E @ E[start]) if need_emb else None  # cosine distance to seen
+
+    budget = min(budget, n)
+    while len(seen_species) < budget and seen.sum() < n and len(curve) < budget:
+        cand = ~seen
+        if kind == "random":
+            nxt = int(rng.choice(np.flatnonzero(cand)))
+        elif kind == "spatial_coverage":
+            score = np.where(cand, mind_geo, NEG); nxt = int(np.argmax(score))
+        elif kind == "spatial_coverage_raw":       # control: distorted lat/lon metric
+            score = np.where(cand, mind_geo_raw, NEG); nxt = int(np.argmax(score))
+        elif kind == "embedding_novelty":          # greedy k-center / CoreSet
+            score = np.where(cand, mind_emb, NEG); nxt = int(np.argmax(score))
+        elif kind == "embedding_kmeanspp":         # D^2-weighted probabilistic coverage
+            w = np.where(cand, mind_emb ** 2, 0.0)
+            s = w.sum()
+            nxt = (int(rng.choice(n, p=w / s)) if s > 0
+                   else int(rng.choice(np.flatnonzero(cand))))
+        elif kind == "combined":                   # z-scored spatial + embedding
+            score = _zscore_masked(mind_geo, cand) + _zscore_masked(mind_emb, cand)
+            nxt = int(np.argmax(score))
+        else:
+            raise ValueError(kind)
+
+        seen[nxt] = True
+        seen_species.add(species_ids[nxt])
         curve.append(len(seen_species))
+        if need_geo:
+            mind_geo = np.minimum(mind_geo, _haversine_to(lat_rad, lon_rad, nxt))
+        if need_geo_raw:
+            mind_geo_raw = np.minimum(mind_geo_raw, _raw_latlon_to(lat, lon, nxt))
+        if need_emb:
+            mind_emb = np.minimum(mind_emb, 1.0 - E @ E[nxt])
     return curve
-
-
-def acq_random(seen, remaining, recs, E, rng):
-    return int(rng.choice(list(remaining)))
-
-def acq_embed_novelty(seen, remaining, recs, E, rng):
-    rem = np.fromiter(remaining, int)
-    sims = E[rem] @ E[seen].T
-    nearest = sims.max(axis=1)
-    return int(rem[int(np.argmin(nearest))])
-
-def acq_spatial_coverage(seen, remaining, recs, E, rng):
-    rem = np.fromiter(remaining, int)
-    sl = np.array([[recs[i]["lat"], recs[i]["lon"]] for i in seen])
-    rl = np.array([[recs[i]["lat"], recs[i]["lon"]] for i in rem])
-    d = np.sqrt(((rl[:, None, :] - sl[None, :, :]) ** 2).sum(-1))
-    return int(rem[int(np.argmax(d.min(axis=1)))])
 
 
 def auc(curve, budget):
@@ -182,24 +276,71 @@ def auc(curve, budget):
     return float(c[:budget].mean())
 
 
+def paired_permutation_p(a, b, n_perm=20000, seed=0):
+    """Two-sided paired sign-flip permutation test on mean(a-b). Pure numpy."""
+    d = np.asarray(a, float) - np.asarray(b, float)
+    obs = abs(d.mean())
+    if obs == 0 or np.allclose(d, 0):
+        return 1.0
+    rng = np.random.default_rng(seed)
+    signs = rng.choice([-1.0, 1.0], size=(n_perm, len(d)))
+    perm = np.abs((signs * d).mean(axis=1))
+    return float((perm >= obs - 1e-12).mean())
+
+
+def bootstrap_ci(a, b, n_boot=20000, seed=0):
+    """95% bootstrap CI for mean(a-b)."""
+    d = np.asarray(a, float) - np.asarray(b, float)
+    rng = np.random.default_rng(seed)
+    idx = rng.integers(0, len(d), size=(n_boot, len(d)))
+    means = d[idx].mean(axis=1)
+    return float(np.percentile(means, 2.5)), float(np.percentile(means, 97.5))
+
+
+def contrast(name_a, name_b, per_seed):
+    """Paired comparison a vs b on species@budget across seeds."""
+    a, b = per_seed[name_a], per_seed[name_b]
+    d = np.asarray(a, float) - np.asarray(b, float)
+    lo, hi = bootstrap_ci(a, b)
+    out = {"a": name_a, "b": name_b, "mean_diff": float(d.mean()),
+           "ci95": [lo, hi], "p_perm": paired_permutation_p(a, b),
+           "wins": int((d > 0).sum()), "ties": int((d == 0).sum()),
+           "losses": int((d < 0).sum()), "n_seeds": len(d)}
+    try:
+        from scipy.stats import wilcoxon
+        if np.any(d != 0):
+            out["p_wilcoxon"] = float(wilcoxon(a, b).pvalue)
+    except Exception:
+        pass
+    return out
+
+
+def emb_cache_path(cache_dir, backbone):
+    return Path(cache_dir) / f"emb_{backbone}.npz" if cache_dir else None
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--n", type=int, default=1200)
     ap.add_argument("--budget", type=int, default=300)
     ap.add_argument("--seeds", type=int, default=20)
+    ap.add_argument("--backbone", default="auto",
+                    choices=["auto", "dinov2", "resnet50", "clip"])
     ap.add_argument("--out", default=".")
     ap.add_argument("--image-cache", default=None,
-                    help="Dir to read/write cached images. Set for offline mode.")
+                    help="Dir to read/write cached images + embeddings (offline mode).")
     ap.add_argument("--obs-cache", default=None,
                     help="Path to pre-saved observations JSON (from --stage-only run).")
     ap.add_argument("--stage-only", action="store_true",
                     help="Download obs+photos to --image-cache, save JSON, then exit.")
+    ap.add_argument("--no-emb-cache", action="store_true",
+                    help="Recompute embeddings even if a cache exists.")
     args = ap.parse_args()
 
     cache_dir = Path(args.image_cache) if args.image_cache else None
     obs_json = Path(args.obs_cache) if args.obs_cache else None
 
-    # STAGE MODE: run on login node
+    # STAGE MODE: login node, needs internet
     if args.stage_only:
         print("[stage] pulling observations from iNaturalist...")
         recs = pull_observations(args.n)
@@ -212,67 +353,132 @@ def main():
         print(f"[stage] saved {out_json}")
         return
 
-    # GPU MODE
-    import torch
-    device = "cuda" if torch.cuda.is_available() else "cpu"
     t0 = time.time()
-    gpu_name = torch.cuda.get_device_name(0) if torch.cuda.is_available() else "cpu"
-    print(f"device={device} cuda={torch.cuda.is_available()} name={gpu_name}")
 
-    if obs_json and obs_json.exists():
-        print(f"[run] loading obs from {obs_json}")
-        with open(obs_json) as f:
-            recs = json.load(f)
+    # ---- obtain embeddings (from cache, or compute) ----
+    # cache files are keyed by the *resolved* backbone name (e.g. dinov2_vits14),
+    # so map the --backbone arg to that name for the lookup.
+    resolved = ARG_TO_BACKBONE.get(args.backbone) if args.backbone != "auto" else None
+    cache_npz = emb_cache_path(cache_dir, resolved) if resolved else None
+    device = "cpu"
+    gpu_name = "cpu"
+
+    if cache_npz and cache_npz.exists() and not args.no_emb_cache:
+        print(f"[run] loading cached embeddings from {cache_npz}")
+        z = np.load(cache_npz)  # self-written cache; plain arrays only, no pickle
+        E = z["E"]; species = list(z["species"]); lat = z["lat"]; lon = z["lon"]
+        backbone = str(z["backbone"])
     else:
-        print("[run] no obs cache, pulling from iNat (need internet)...")
-        recs = pull_observations(args.n)
+        import torch
+        device = "cuda" if torch.cuda.is_available() else "cpu"
+        gpu_name = torch.cuda.get_device_name(0) if torch.cuda.is_available() else "cpu"
+        print(f"device={device} cuda={torch.cuda.is_available()} name={gpu_name}")
+        if obs_json and obs_json.exists():
+            print(f"[run] loading obs from {obs_json}")
+            with open(obs_json) as f:
+                recs = json.load(f)
+        else:
+            print("[run] no obs cache, pulling from iNat (need internet)...")
+            recs = pull_observations(args.n)
+        print(f"pulled {len(recs)} amphibian obs w/ photo+species, "
+              f"{len(set(r['species'] for r in recs))} distinct species")
+        use_cache = cache_dir is not None
+        E, keep, backbone = embed_images(recs, device, want=args.backbone, use_cache=use_cache)
+        recs = [recs[i] for i in keep]
+        species = [r["species"] for r in recs]
+        lat = np.array([r["lat"] for r in recs], float)
+        lon = np.array([r["lon"] for r in recs], float)
+        print(f"embedded {len(recs)} images with {backbone}, dim={E.shape[1]} "
+              f"in {time.time()-t0:.0f}s")
+        out_npz = emb_cache_path(cache_dir, backbone)
+        if out_npz is not None:
+            np.savez_compressed(out_npz, E=E.astype(np.float32), species=np.array(species),
+                                lat=lat, lon=lon, backbone=backbone)
+            print(f"[cache] wrote embeddings -> {out_npz}")
 
-    print(f"pulled {len(recs)} amphibian obs w/ photo+species, "
-          f"{len(set(r['species'] for r in recs))} distinct species")
+    species = list(species)
+    lat = np.asarray(lat, float); lon = np.asarray(lon, float)
+    n_obs = len(species)
+    n_species = len(set(species))
+    budget = min(args.budget, n_obs)
+    print(f"sweep: n_obs={n_obs} n_species={n_species} budget={budget} "
+          f"seeds={args.seeds} backbone={backbone}")
 
-    use_cache = cache_dir is not None
-    E, keep, backbone = embed_images(recs, device, use_cache=use_cache)
-    recs = [recs[i] for i in keep]
-    print(f"embedded {len(recs)} images with {backbone}, dim={E.shape[1]} in {time.time()-t0:.0f}s")
-    n_species = len(set(r["species"] for r in recs))
-
-    strategies = {"random": acq_random, "spatial_coverage": acq_spatial_coverage,
-                  "embedding_novelty": acq_embed_novelty}
-    budget = min(args.budget, len(recs))
-    results = defaultdict(list)
+    # ---- strategy sweep (pure numpy) ----
+    results = {}
     curves_mean = {}
-    for name, fn in strategies.items():
-        aucs, last = [], []
-        all_curves = []
+    per_seed_last = {}   # species@budget per seed, paired across strategies by seed
+    for name in STRATEGIES:
+        aucs, last, all_curves = [], [], []
         for s in range(args.seeds):
-            c = discover(fn, recs, E, seed=s, budget=budget)
+            c = run_discovery(name, lat, lon, E, species, seed=s, budget=budget)
             aucs.append(auc(c, budget)); last.append(c[-1])
             padded = np.array(c + [c[-1]] * (budget - len(c)))[:budget]
             all_curves.append(padded)
+        per_seed_last[name] = last
         results[name] = {"auc_mean": float(np.mean(aucs)), "auc_std": float(np.std(aucs)),
                          "species_at_budget_mean": float(np.mean(last)),
-                         "species_at_budget_std": float(np.std(last))}
+                         "species_at_budget_std": float(np.std(last)),
+                         "species_at_budget_per_seed": [int(x) for x in last]}
         curves_mean[name] = np.mean(all_curves, 0).tolist()
         print(f"  {name:18s} AUC={results[name]['auc_mean']:.1f}±{results[name]['auc_std']:.1f} "
-              f"species@{budget}={results[name]['species_at_budget_mean']:.1f}")
+              f"species@{budget}={results[name]['species_at_budget_mean']:.2f}"
+              f"±{results[name]['species_at_budget_std']:.2f}")
 
-    base = results["spatial_coverage"]["species_at_budget_mean"]
-    fancy = results["embedding_novelty"]["species_at_budget_mean"]
-    rng_r = results["random"]["species_at_budget_mean"]
-    verdict = ("embedding_novelty BEATS coverage" if fancy > base + 1 else
-               "embedding_novelty does NOT beat coverage" if fancy < base - 1 else
-               "embedding_novelty TIES coverage")
-    print(f"\nVERDICT @budget={budget}: {verdict} "
-          f"(novelty {fancy:.1f} vs coverage {base:.1f} vs random {rng_r:.1f}; total species {n_species})")
+    # ---- paired significance: the design-04 no-free-lunch verdict ----
+    emb_strats = ["embedding_novelty", "embedding_kmeanspp"]
+    best_emb = max(emb_strats, key=lambda k: results[k]["species_at_budget_mean"])
+    # The honest baseline is the *best* simple spatial strategy, not whichever metric
+    # flatters the embedding. On a wide-longitude region the distorted raw lat/lon often
+    # out-discovers haversine (it over-weights longitude, capturing E-W species turnover),
+    # so compare embedding/combined against whichever spatial metric scores higher.
+    spatial_strats = ["spatial_coverage", "spatial_coverage_raw"]
+    best_spatial = max(spatial_strats, key=lambda k: results[k]["species_at_budget_mean"])
+    contrasts = {
+        "coverage_vs_random": contrast("spatial_coverage", "random", per_seed_last),
+        "best_embedding_vs_coverage": contrast(best_emb, "spatial_coverage", per_seed_last),
+        "combined_vs_coverage": contrast("combined", "spatial_coverage", per_seed_last),
+        "kmeanspp_vs_kcenter": contrast("embedding_kmeanspp", "embedding_novelty", per_seed_last),
+        # control on IDENTICAL data: does fixing the distorted lat/lon metric change coverage?
+        "haversine_vs_raw_spatial": contrast("spatial_coverage", "spatial_coverage_raw", per_seed_last),
+        # the load-bearing comparison: best embedding / combined vs the BEST simple spatial baseline
+        "best_embedding_vs_best_spatial": contrast(best_emb, best_spatial, per_seed_last),
+        "combined_vs_best_spatial": contrast("combined", best_spatial, per_seed_last),
+    }
 
-    out_data = {"meta": {"n_obs": len(recs), "n_species": n_species, "budget": budget,
+    def verdict_line(label, c):
+        sig = "SIGNIFICANT" if c["p_perm"] < 0.05 else "n.s."
+        sign = "BEATS" if c["mean_diff"] > 0 else "trails" if c["mean_diff"] < 0 else "ties"
+        return (f"{label}: {c['a']} {sign} {c['b']} by {c['mean_diff']:+.2f} sp "
+                f"(95% CI [{c['ci95'][0]:+.2f},{c['ci95'][1]:+.2f}], p_perm={c['p_perm']:.3f} {sig}; "
+                f"W/T/L {c['wins']}/{c['ties']}/{c['losses']})")
+
+    bs = results[best_spatial]["species_at_budget_mean"]
+    def beats(key):
+        c = contrasts[key]
+        return c["mean_diff"] > 0 and c["p_perm"] < 0.05
+    emb_wins = beats("best_embedding_vs_best_spatial")
+    comb_wins = beats("combined_vs_best_spatial")
+    headline = (
+        f"vs the BEST simple spatial baseline ({best_spatial}, {bs:.2f} sp): "
+        f"pure embedding {'BEATS' if emb_wins else 'does NOT beat'} it; "
+        f"combined (spatial+embedding) {'BEATS' if comb_wins else 'does NOT beat'} it")
+    print("\n=== VERDICT (paired across seeds) ===")
+    for k, c in contrasts.items():
+        print("  " + verdict_line(k, c))
+    print(f"  HEADLINE: {headline} (total species {n_species})")
+
+    out_data = {"meta": {"n_obs": n_obs, "n_species": n_species, "budget": budget,
                          "seeds": args.seeds, "backbone": backbone, "device": device,
-                         "gpu_name": gpu_name,
+                         "gpu_name": gpu_name, "geo_distance": "haversine",
                          "runtime_s": round(time.time() - t0, 1)},
-                "results": dict(results), "curves_mean": curves_mean, "verdict": verdict}
+                "results": results, "curves_mean": curves_mean,
+                "contrasts": contrasts, "headline": headline}
     os.makedirs(args.out, exist_ok=True)
-    with open(os.path.join(args.out, "exp_discovery_results.json"), "w") as f:
+    tag = f"_{backbone}"
+    with open(os.path.join(args.out, f"exp_discovery_results{tag}.json"), "w") as f:
         json.dump(out_data, f, indent=2)
+    print(f"wrote exp_discovery_results{tag}.json")
     try:
         import matplotlib; matplotlib.use("Agg")
         import matplotlib.pyplot as plt
@@ -280,13 +486,13 @@ def main():
         for name, c in curves_mean.items():
             plt.plot(range(1, len(c) + 1), c, label=name, lw=2)
         plt.xlabel("observations sampled"); plt.ylabel("distinct species discovered")
-        plt.title(f"BTG amphibian discovery curves ({backbone}, n={len(recs)}, {args.seeds} seeds)")
+        plt.title(f"BTG amphibian discovery ({backbone}, n={n_obs}, {args.seeds} seeds)")
         plt.legend(); plt.tight_layout()
-        plt.savefig(os.path.join(args.out, "exp_discovery_curves.png"), dpi=120)
-        print("wrote exp_discovery_curves.png")
+        plt.savefig(os.path.join(args.out, f"exp_discovery_curves{tag}.png"), dpi=120)
+        print(f"wrote exp_discovery_curves{tag}.png")
     except Exception as e:
         print(f"[plot] skipped: {e}")
-    print(f"DONE in {time.time()-t0:.0f}s -> exp_discovery_results.json")
+    print(f"DONE in {time.time()-t0:.0f}s")
 
 
 if __name__ == "__main__":
