@@ -1,0 +1,94 @@
+{
+  "metric": "distinct RARE species (<=3 obs in the 1200-pool) discovered @budget=300; 100 seeds; paired sign-flip perm",
+  "per_taxon": {
+    "Amphibia": {
+      "n_rare": 9,
+      "n_species": 36,
+      "random": 3.1,
+      "spatial": 3.6,
+      "dinov2_nov": 4.4,
+      "bioclip_nov": 4.3,
+      "bioclip_combined": 4.6,
+      "bioclip_nov_minus_spatial": 0.8,
+      "p_perm": 0.0
+    },
+    "Reptilia": {
+      "n_rare": 17,
+      "n_species": 55,
+      "random": 6.2,
+      "spatial": 9.7,
+      "dinov2_nov": 4.6,
+      "bioclip_nov": 9.6,
+      "bioclip_combined": 11.8,
+      "bioclip_nov_minus_spatial": -0.1,
+      "p_perm": 0.716
+    },
+    "Mammalia": {
+      "n_rare": 37,
+      "n_species": 81,
+      "random": 13.6,
+      "spatial": 23.3,
+      "dinov2_nov": 14.4,
+      "bioclip_nov": 24.1,
+      "bioclip_combined": 27.3,
+      "bioclip_nov_minus_spatial": 0.8,
+      "p_perm": 0.0
+    },
+    "Arachnida": {
+      "n_rare": 114,
+      "n_species": 159,
+      "random": 40.0,
+      "spatial": 46.2,
+      "dinov2_nov": 38.2,
+      "bioclip_nov": 62.4,
+      "bioclip_combined": 54.9,
+      "bioclip_nov_minus_spatial": 16.2,
+      "p_perm": 0.0
+    },
+    "Aves": {
+      "n_rare": 150,
+      "n_species": 244,
+      "random": 52.5,
+      "spatial": 63.9,
+      "dinov2_nov": 49.0,
+      "bioclip_nov": 68.1,
+      "bioclip_combined": 69.5,
+      "bioclip_nov_minus_spatial": 4.1,
+      "p_perm": 0.0
+    },
+    "Fungi": {
+      "n_rare": 256,
+      "n_species": 312,
+      "random": 76.3,
+      "spatial": 84.7,
+      "dinov2_nov": 80.4,
+      "bioclip_nov": 130.4,
+      "bioclip_combined": 107.7,
+      "bioclip_nov_minus_spatial": 45.7,
+      "p_perm": 0.0
+    },
+    "Insecta": {
+      "n_rare": 314,
+      "n_species": 389,
+      "random": 101.8,
+      "spatial": 103.1,
+      "dinov2_nov": 105.9,
+      "bioclip_nov": 155.7,
+      "bioclip_combined": 124.3,
+      "bioclip_nov_minus_spatial": 52.5,
+      "p_perm": 0.0
+    },
+    "Plantae": {
+      "n_rare": 459,
+      "n_species": 536,
+      "random": 153.3,
+      "spatial": 151.7,
+      "dinov2_nov": 148.3,
+      "bioclip_nov": 196.2,
+      "bioclip_combined": 174.8,
+      "bioclip_nov_minus_spatial": 44.6,
+      "p_perm": 0.0
+    }
+  },
+  "summary": "BioCLIP-novelty significantly beats spatial coverage at RARE-species discovery in 7/8 taxa (paired perm p<0.05)."
+}

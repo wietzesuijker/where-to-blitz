@@ -327,6 +327,24 @@ print(f"  emb_sep             = {sp['emb_sep_vs_benefit']:+.2f}  (no signal alon
 print("\n" + s['conclusion'])
 pd.DataFrame(rows).set_index('taxon')""")
 
+md(r"""## The conservation-relevant cut: rare-species discovery
+
+BTG ultimately cares about *rare* species, not just distinct ones. We re-scored the discovery curves counting only
+**rare species (≤3 observations in the 1200-obs pool)** — the rarely-recorded taxa a bioblitz most wants to surface.
+The domain-match result holds and sharpens: a domain-specific embedding (BioCLIP) discovers rare species much faster
+than geographic coverage in species-rich groups, while a generic embedding (DINOv2) is often *worse* than coverage.
+Paired sign-flip permutation over 100 seeds.""")
+
+co(r"""import json, pandas as pd
+r = json.load(open('cluster_results/generalization/rare_species_discovery.json'))
+rows = [{'taxon': t, 'n_rare': v['n_rare'], 'spatial': v['spatial'], 'DINOv2_nov': v['dinov2_nov'],
+         'BioCLIP_nov': v['bioclip_nov'], 'BioCLIP_comb': v['bioclip_combined'],
+         'BioCLIP−spatial': v['bioclip_nov_minus_spatial'], 'p_perm': v['p_perm']}
+        for t, v in sorted(r['per_taxon'].items(), key=lambda kv: kv[1]['n_species'])]
+print(r['summary'])
+print("(Generic DINOv2-novelty is frequently *below* spatial for rare species — a generic embedding can hurt.)")
+pd.DataFrame(rows).set_index('taxon')""")
+
 md(r"""## Reproducibility — deterministic *and* cross-cluster
 
 Two layers. **Determinism:** the strategy sweep is pure NumPy with fixed seeds, so it reproduces exactly —
