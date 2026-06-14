@@ -346,6 +346,28 @@ print("(Generic DINOv2-novelty is frequently *below* spatial for rare species �
 if 'threshold_robustness' in r: print("\nRobustness:", r['threshold_robustness'])
 pd.DataFrame(rows).set_index('taxon')""")
 
+md(r"""## Does it pay off on *short* trips? (small budgets)
+
+A real bioblitz samples tens of sites, not 300. Reading the BioCLIP discovery curves at small budgets shows the
+advantage is there **immediately** — BioCLIP-novelty beats the best spatial baseline at budget 50 for every taxon —
+and grows with budget. So embedding-based site selection helps short trips, not only exhaustive ones.""")
+
+co(r"""import json
+taxa = ['Amphibia','Reptilia','Mammalia','Arachnida','Aves','Fungi','Insecta','Plantae']
+def _load(tx):
+    p = 'cluster_results/mila/exp_discovery_results_bioclip.json' if tx=='Amphibia' \
+        else 'cluster_results/generalization/%s/exp_discovery_results_bioclip.json' % tx
+    return json.load(open(p))
+import pandas as pd
+def at(c,b): return c[min(b,len(c))-1]
+rows = []
+for tx in taxa:
+    cm = _load(tx)['curves_mean']; nov = cm['embedding_novelty']
+    bsp = lambda b: max(at(cm['spatial_coverage'],b), at(cm['spatial_coverage_raw'],b))
+    rows.append({'taxon': tx, **{f'@{b}': round(at(nov,b)-bsp(b),1) for b in (50,100,150,300)}})
+print("BioCLIP-novelty − best spatial (distinct species) at budget B:")
+pd.DataFrame(rows).set_index('taxon')""")
+
 md(r"""## Reproducibility — deterministic *and* cross-cluster
 
 Two layers. **Determinism:** the strategy sweep is pure NumPy with fixed seeds, so it reproduces exactly —
