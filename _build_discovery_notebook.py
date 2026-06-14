@@ -298,10 +298,14 @@ print(f"  separability vs richness          = {s['spearman']['sep_vs_richness']:
 print("\n" + s['conclusion'])
 pd.DataFrame(rows).set_index('taxon')""")
 
-md(r"""## Cross-cluster reproduction
+md(r"""## Reproducibility
 
-The same code was run on more than one cluster with independently-computed embeddings, as a reproduction. The
-verdict cell prints each run's self-recorded headline; the table prints `species@budget` per backbone per cluster.""")
+Two layers of reproducibility. **Determinism:** the strategy sweep is pure NumPy with fixed seeds, so it reproduces
+exactly — re-running it locally from the cluster's cached embeddings gave byte-identical `species@budget` to the
+mila V100 run. **Independent embeddings:** a cross-cluster rerun on DRAC (rorqual, CPU, its own embeddings) was
+queued to confirm the verdict survives a different machine + a different image-embedding pass; at write time rorqual's
+nodes were drained and it had not started, so the table below shows the mila runs only. The per-backbone headlines
+are each run's self-recorded verdict, read from JSON.""")
 
 co(r"""# Per-cluster comparison: same methodology everywhere (guarded at build time).
 import pandas as pd, glob, json
