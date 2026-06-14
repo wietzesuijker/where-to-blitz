@@ -1,7 +1,7 @@
 """BTG species-discovery experiment — offline version (design-04's no-free-lunch test).
 
-Question: does embedding-based acquisition beat simple spatial coverage at
-discovering distinct amphibian species (iNaturalist 228908, real Canada data)?
+Question: does embedding-based acquisition beat simple spatial coverage at discovering
+distinct species? Run on real iNaturalist data over Canada, across taxa and backbones.
 
 Modes
 -----
@@ -11,22 +11,32 @@ Modes
   embed (GPU or CPU), simulate active discovery under several acquisition
   strategies, report discovery curves with paired significance tests.
 
-Embeddings are cached to <image-cache>/emb_<backbone>.npz, so re-running the
+Key options
+-----------
+- --backbone {dinov2,resnet50,clip,bioclip,auto}: vision embedding. `bioclip` is the
+  domain-specific TreeOfLife model (the decisive No-Free-Lunch comparison).
+- --taxon (iconic_taxa) / --project (iNat project_id; 0 = Canada-bbox only): generalize
+  beyond the amphibian / project-228908 default to any taxon.
+
+Embeddings are cached to <image-cache>/emb_[<taxon>_]<backbone>.npz, so re-running the
 strategy sweep (the cheap part) needs neither a GPU nor the images — only numpy.
 
 Strategies
 ----------
-- random              : uniform sampling (the floor).
-- spatial_coverage    : greedy k-center in geographic space (haversine distance).
-- embedding_novelty   : greedy k-center in embedding space (= CoreSet; outlier-prone).
-- embedding_kmeanspp  : D^2-weighted probabilistic coverage (robust to outliers).
-- combined            : z-scored spatial + embedding min-distance (the multi-axis app).
+- random                : uniform sampling (the floor).
+- spatial_coverage      : greedy k-center in geographic space (great-circle/haversine).
+- spatial_coverage_raw  : control — greedy k-center on raw lat/lon Euclidean (the
+                          geographically "wrong" metric), to isolate the metric's effect.
+- embedding_novelty     : greedy k-center in embedding space (= CoreSet; outlier-prone).
+- embedding_kmeanspp    : D^2-weighted probabilistic coverage (robust to outliers).
+- combined              : z-scored haversine-spatial + embedding min-distance (multi-axis).
+- combined_raw          : z-scored raw-spatial + embedding min-distance (control).
 
-Every claim is a measured number with seeds and a paired permutation test.
+Every claim is a measured number with seeds, a paired sign-flip permutation test, and a
+bootstrap CI; contrasts compare each strategy against the BEST simple spatial baseline.
 """
 from __future__ import annotations
 import argparse, io, json, os, time, urllib.request
-from collections import defaultdict
 from pathlib import Path
 import numpy as np
 
