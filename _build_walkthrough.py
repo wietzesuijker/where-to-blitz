@@ -26,7 +26,7 @@ md(r"""
 [Where to Blitz the Gap](https://wietzesuijker.github.io/where-to-blitz/) is a companion
 planning tool for the Canada-wide [Blitz the Gap](https://blitzthegap.org) iNaturalist
 bioblitz. It turns one question — *"where should I go to record biodiversity so my
-observation adds the most to what we know about Canada?"* — into a map you can weight,
+observation adds the most to what we know about the natural world?"* — into a map you can weight,
 explore, and plan a real low-carbon trip on.
 
 If you build, score, or run the campaign — this is the methodology and the data underneath it,
@@ -49,14 +49,14 @@ How a question becomes a map you can act on:
 
 ```mermaid
 flowchart TB
-  Q(["🧭 <b>Where should I record wildlife<br/>so it helps Canada the most?</b>"])
-  subgraph DATA["① Free, public data — no logins, no private files"]
+  Q(["🧭 <b>Where should I record wildlife<br/>so it does the most for biodiversity?</b>"])
+  subgraph DATA["① Free, public data"]
     direction LR
-    D1["iNaturalist<br/>sightings"]
+    D1["iNaturalist sightings"]
     D2["Climate"]
-    D3["Forest<br/>loss"]
-    D4["Roads &<br/>travel time"]
-    D5["At-risk<br/>species lists"]
+    D3["Forest loss"]
+    D4["Roads & travel time"]
+    D5["At-risk species lists"]
   end
   GOALS["② Split Canada into 25 km squares.<br/>Score each square on <b>5 goals</b> (0–1):<br/>find new species · find rare species ·<br/>cover every habitat · revisit quiet spots · beat habitat loss"]
   IMPACT["③ <b>You</b> choose how much each goal matters.<br/>→ one <b>0–100 'impact' score</b> per square"]
@@ -71,8 +71,8 @@ flowchart TB
   style CHECK fill:#eaf4ea,stroke:#2a9d4a
 ```
 
-**In one breath:** the tool turns six free public datasets into a score for every 25 km
-square of Canada, lets *you* weight what "worth visiting" means, and points you to the best
+**In one breath:** the tool turns six free, public datasets (no logins, no private files) into
+a score for every 25 km square of Canada, lets *you* weight what "worth visiting" means, and points you to the best
 spot you can actually reach — and its choices are checked against a real bioblitz, not just
 asserted. The rest of this notebook opens each box: what's in a square, why each goal is
 scored the way it is, and the evidence behind the headline.
@@ -254,9 +254,19 @@ print("→ density 0→thousands and zero-obs 95%→0% across the line = a data-
 md(r"""
 ## 3 · The five goals — what each one looks like over Canada
 
-Every square is scored from **0 to 1** on five goals (we call them *axes* in the code). Here
-they are side by side — read each map as *"where would this goal send me?"* They send you to
-different places, which is exactly why you get to choose between them (§6). Each goal below
+Every square is scored from **0 to 1** on five goals (we call them *axes* in the code). The
+code names are terse, so here is what each one means before you see it on a map:
+
+| Axis (code name) | The goal, in plain English | A high score means |
+|---|---|---|
+| `discover` | Go where few people have looked | Hardly any iNaturalist records nearby |
+| `conservation` | Go where at-risk species live | Many threatened species recorded around the square |
+| `env` | Cover every habitat | The square's *climate type* is barely sampled anywhere |
+| `staleness` | Revisit places that have gone quiet | Lots of old records, very few recent ones |
+| `urgency` | Record it before it's lost | Recent forest-cover loss (logging, fire, dieback) |
+
+Below they are side by side — read each map as *"where would this goal send me?"* They send you
+to different places, which is exactly why you get to choose between them (§6). Each goal below
 opens with a one-line plain-English version, then the exact method and the design choice behind it.
 """)
 code(r"""
@@ -331,7 +341,7 @@ mitigation, and they stay in force for any future finer layer.
 """)
 code(r"""
 cons = pd.read_csv(CA / "ca_atrisk_richness.csv")
-top = cons.nlargest(8, "n_species")[["lat", "lon", "n_species"]].reset_index(drop=True)
+top = cons.nlargest(8, "n_species").reset_index(drop=True)
 
 def name_place(lat, lon):
     spots = [("Point Pelee / Carolinian SW Ontario", 42.0, -82.5),
@@ -340,12 +350,15 @@ def name_place(lat, lon):
              ("Niagara / Golden Horseshoe", 43.1, -79.4), ("Montréal / St. Lawrence", 45.5, -73.6)]
     return min(spots, key=lambda s: (s[1]-lat)**2 + (s[2]-lon)**2)[0]
 top["likely region"] = [name_place(r.lat, r.lon) for r in top.itertuples()]
+# Region first, with explicit widths, so its long labels get the room and never clip the right edge.
+top = top[["likely region", "n_species", "lat", "lon"]]
 
 fig, axs = plt.subplots(1, 2, figsize=(12, 4.2))
 canada_map(axs[0], ALL["conservation"], "Conservation axis (25 km, all-taxa pooled)", cmap="magma")
 axs[1].axis("off")
 axs[1].set_title("Top at-risk-richness cells = Canada's real hotspots", fontsize=10)
-tbl = axs[1].table(cellText=top.round(2).values, colLabels=top.columns, loc="center", cellLoc="left")
+tbl = axs[1].table(cellText=top.round(2).values, colLabels=top.columns, loc="center",
+                   cellLoc="left", colWidths=[0.52, 0.16, 0.16, 0.16])
 tbl.auto_set_font_size(False); tbl.set_fontsize(8); tbl.scale(1, 1.5)
 fig.suptitle("Find rare species — concentrated, validated against known hotspots, deliberately coarse", y=1.0)
 plt.tight_layout(); plt.show()
@@ -354,7 +367,7 @@ print("Caveat: reflects ASSESSED species only (CAN-SAR ~2021); IUCN/COSEWIC unde
 
 # ---- env
 md(r"""
-### 3.3 · Cover every habitat — climate "surprisal"
+### 3.3 · Cover every habitat — sampling Canada's rarest climates
 
 > **In plain terms:** *go where the climate itself is barely recorded.* Some climate types —
 > a particular cold, wet, coastal mix, say — are hardly sampled anywhere in Canada. A square
@@ -363,15 +376,16 @@ md(r"""
 **Measures:** how under-sampled a square's *climate type* is (not its location).
 **How:** we describe each square by three CHELSA numbers (temperature, how much it swings
 through the year, and rainfall), then ask "how many *already-recorded* places have a climate
-like this one?" Few similar recorded places → high score. (Technically: a density estimate in
-3-D climate space, ranked 0–1.)
+like this one?" Few similar recorded places → high score. (Technically this is *climate
+surprisal*: a density estimate in 3-D climate space, ranked 0–1 — a rarely-seen climate is
+"surprising," so it scores high.)
 
 **The choice:** a geographic gap is not the same as a *climate* gap. Scoring climate rarity
 rather than distance keeps this goal genuinely different from "discover" — we check that in §6.
 """)
 code(r"""
 fig, axs = plt.subplots(1, 2, figsize=(12, 3.8))
-canada_map(axs[0], ALL["env"], "Climate surprisal over Canada", cmap="magma")
+canada_map(axs[0], ALL["env"], "How rare each square's climate is", cmap="magma")
 axs[1].hist(ALL["env"], bins=60, color="#16a085")
 axs[1].set_title("Percentile-ranked → uses the full 0–1 range"); axs[1].set_xlabel("env"); axs[1].set_ylabel("cells")
 plt.tight_layout(); plt.show()
