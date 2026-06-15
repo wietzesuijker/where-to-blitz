@@ -43,51 +43,52 @@ from the committed build — re-execute top to bottom to reproduce every figure.
 
 # ---------------------------------------------------------------- zoom out
 md(r"""
-## 0 · Zoom out — the map
+## 0 · Zoom out — the whole tool in one picture
 
-Before any formula, here is the whole system at one level of abstraction, in the
-project's own vocabulary (axes, cells, groups, impact, presets).
+How a question becomes a map you can act on:
 
 ```mermaid
-flowchart LR
-  subgraph SRC["External data (public)"]
-    A1["iNat density COG<br/>(Biodiversité Québec STAC)"]
-    A2["CHELSA bioclimate"]
-    A3["Hansen Global Forest Change"]
-    A4["Weiss 2018 travel-time"]
-    A5["CAN-SAR × GBIF<br/>(at-risk occurrences)"]
-    A6["iNat open-data dump<br/>(per-record dates)"]
+flowchart TB
+  Q(["🧭 <b>Where should I record wildlife<br/>so it helps Canada the most?</b>"])
+  subgraph DATA["① Free, public data — no logins, no private files"]
+    direction LR
+    D1["iNaturalist<br/>sightings"]
+    D2["Climate"]
+    D3["Forest<br/>loss"]
+    D4["Roads &<br/>travel time"]
+    D5["At-risk<br/>species lists"]
   end
-  subgraph BUILD["Build (Python, deterministic)"]
-    B1["build_fullgrid_ca.py<br/>→ discover · env · urgency · travel · n_train"]
-    B2["build_atrisk_layer.py +<br/>join_conservation.py → conservation"]
-    B3["cluster DuckDB →<br/>ca_inat_metrics.csv → staleness"]
-  end
-  GRID["31,804 land cells · 0.25° · 11 life groups<br/>each cell = 5 axes (0–1) + travel + n_train<br/>cluster_results/ca/webapp_data_*.json"]
-  APP["build_webapp.py → index.html<br/>impact = percentile-rank(Σ wᵢ·axisᵢ)<br/>Explore · Plan a trip · Compare goals"]
-  VAL["Validation (docs side)<br/>voi_backtest.py · backtest_appscore.py<br/>leakage-free temporal split"]
+  GOALS["② Split Canada into 25 km squares.<br/>Score each square on <b>5 goals</b> (0–1):<br/>find new species · find rare species ·<br/>cover every habitat · revisit quiet spots · beat habitat loss"]
+  IMPACT["③ <b>You</b> choose how much each goal matters.<br/>→ one <b>0–100 'impact' score</b> per square"]
+  APP(["④ <b>The map</b><br/>🗺️ Explore  ·  🚗 Plan a trip  ·  📊 Compare goals"])
+  CHECK{{"✅ Reality-checked against a real bioblitz:<br/>do its top spots actually find more species? <b>Yes.</b>"}}
 
-  A1 & A2 & A3 & A4 --> B1
-  A5 --> B2
-  A6 --> B3
-  B1 & B2 & B3 --> GRID --> APP
-  GRID -. "tests the central choice" .-> VAL
+  Q --> DATA --> GOALS --> IMPACT --> APP
+  GOALS -. "validated" .-> CHECK
+
+  style Q fill:#1b4965,color:#fff,stroke:#1b4965
+  style APP fill:#2a9d4a,color:#fff,stroke:#2a9d4a
+  style CHECK fill:#eaf4ea,stroke:#2a9d4a
 ```
 
-**One line per module** (the seams you'd touch):
+**In one breath:** the tool turns six free public datasets into a score for every 25 km
+square of Canada, lets *you* weight what "worth visiting" means, and points you to the best
+spot you can actually reach — and its choices are checked against a real bioblitz, not just
+asserted. The rest of this notebook opens each box: what's in a square, why each goal is
+scored the way it is, and the evidence behind the headline.
+
+<details><summary><b>Under the hood</b> — the modules a developer would touch</summary>
 
 | Module | Responsible for |
 |---|---|
-| `build_fullgrid_ca.py` | The four raster axes per cell — **discover, env (climate surprisal), urgency, travel** — plus `n_train`. Defines the grid + land mask. |
-| `build_atrisk_layer.py` + `join_conservation.py` | The **conservation** axis: CAN-SAR (COSEWIC/SARA) species × their GBIF occurrences → per-cell status-weighted at-risk richness, aggregated to 25 km. |
-| cluster DuckDB → `ca_inat_metrics.csv` → `build_staleness_layer.py` | The **staleness** axis: all-time vs last-5-years iNaturalist density per cell. |
-| `build_webapp.py` | The single source of truth for the app. Combines the five axes into **impact** (a percentile rank), holds every UI string (EN/FR), the trip planner, and emits `index.html`. |
+| `build_fullgrid_ca.py` | The four raster goals per square — **discover, habitat coverage, urgency, travel** — plus `n_train`. Defines the grid + land mask. |
+| `build_atrisk_layer.py` + `join_conservation.py` | The **rare-species** goal: CAN-SAR (COSEWIC/SARA) species × their GBIF occurrences → per-square status-weighted at-risk richness, aggregated to 25 km. |
+| cluster DuckDB → `ca_inat_metrics.csv` → `build_staleness_layer.py` | The **freshness** goal: all-time vs last-5-years iNaturalist density per square. |
+| `build_webapp.py` | The single source of truth for the app. Combines the five goals into **impact** (a percentile rank), holds every UI string (EN/FR), the trip planner, and emits `index.html`. |
 | `build_provenance.py` | Freezes the national build to a hashed manifest (`provenance.json`). |
-| `voi_backtest.py`, `backtest_appscore.py` | The validation layer: do directed (gap-filling) priorities actually discover more than going where it's already busy? |
+| `voi_backtest.py`, `backtest_appscore.py` | The validation layer: do gap-filling priorities actually discover more than going where it's already busy? |
 
-The rest of the notebook walks the **GRID → APP** path: the contents of a cell, the choice
-behind each axis, the choice behind the composite, and finally the evidence that the central
-choice is the right one.
+</details>
 """)
 
 # ---------------------------------------------------------------- setup
