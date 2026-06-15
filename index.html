@@ -246,6 +246,8 @@ details.adv>summary:hover{color:var(--ink)}
     <label class="toggle" style="margin:8px 0 2px"><input type="checkbox" id="tgGettingEven"> <span data-i18n="getting_even">⚖️ Getting Even — which group to record</span></label><span class="infobtn" data-i18n-title="ge_info_btn" title="How is the recommended group worked out?" role="button" tabindex="0" aria-label="How the recommended group is worked out" aria-expanded="false" style="margin-left:6px;vertical-align:middle" onclick="const b=document.getElementById('geinfo').classList.toggle('open');this.setAttribute('aria-expanded',b)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click();}">i</span>
     <div style="color:var(--mut);font-size:11px;line-height:1.4" data-i18n="ge_hint">Each cell is coloured by the most under-represented taxonomic group there (birds excluded — already well covered by eBird) — our finer-resolution take on the official "Getting Even" challenge. From iNaturalist observation density: a sample, not a census.</div>
     <div class="infobox" id="geinfo" data-i18n-html="ge_method"></div>
+    <label class="toggle" style="margin:8px 0 2px"><input type="checkbox" id="tgZoomScale"> <span data-i18n="zoom_scale">🔍 Rescale colours to the current view</span></label>
+    <div style="color:var(--mut);font-size:11px;line-height:1.4" data-i18n="zoom_scale_hint">Ranks cells against what's on screen, so local gaps stand out when you zoom in. Off = ranked across all of Canada (a dark cell means the same everywhere).</div>
     <div style="display:flex;justify-content:space-between;margin:9px 0 0"><span style="font-size:13px" data-i18n="map_brightness">Map brightness</span><span class="v" id="bopv" style="color:var(--acc)">100%</span></div>
     <input type="range" id="baseop" min="0.25" max="1" step="0.05" value="1" aria-label="Map brightness">
   </details>
@@ -261,7 +263,7 @@ details.adv>summary:hover{color:var(--ink)}
 <div id="map" role="application" aria-label="Interactive priority map (screen-reader users: use the Top cells list)"></div>
 <div id="viewtoggle" role="navigation" aria-label="Map view"><button id="vexplore" class="on" aria-pressed="true" data-i18n="view_explore">🗺 Explore</button><button id="vplan" aria-pressed="false" data-i18n="view_plan">🧭 Plan a trip</button><button id="vcompare" aria-pressed="false" data-i18n="view_compare">📊 Compare goals</button></div>
 <div id="loading" role="status" aria-live="polite" data-i18n="loading">🍃 Loading the map…</div>
-<div id="maplegend" role="region" aria-label="Map legend"><div class="lt" data-i18n="legend_title">Where to blitz</div><div class="ramp"></div><div class="lab"><span data-i18n="legend_low">well-sampled</span><span data-i18n="legend_high">biggest gaps</span></div><div class="hint" data-i18n-html="legend_hint">Darker = higher priority. <span id="legendtap">Tap a cell to see what to record.</span></div></div>
+<div id="maplegend" role="region" aria-label="Map legend"><div class="lt" data-i18n="legend_title">Where to blitz</div><div class="ramp"></div><div class="lab"><span data-i18n="legend_low">well-sampled</span><span data-i18n="legend_high">biggest gaps</span></div><div class="hint" data-i18n-html="legend_hint">Darker = higher priority. <span id="legendtap">Tap a cell to see what to record.</span></div><div class="hint" id="legendrel" style="display:none;color:#7a5b00" data-i18n="legend_rel">⚖ Colours rescaled to this view — not comparable to other zoom levels.</div></div>
 <div id="insights"></div>
 </div>
 
@@ -331,6 +333,9 @@ const I18N={
     ge_cats:["Fishes","Fungi","Reptiles & Amphibians","Invertebrates","Mammals","Plants"],
     ge_all:"All groups under-sampled",
     ge_most:"⚖️ Most under-represented here:",
+    zoom_scale:"🔍 Rescale colours to the current view",
+    zoom_scale_hint:`Ranks cells against what's on screen, so local gaps stand out when you zoom in. Off = ranked across all of Canada (a dark cell means the same everywhere).`,
+    legend_rel:"⚖ Colours rescaled to this view — not comparable to other zoom levels.",
     map_brightness:"Map brightness",
     how_scored:"How impact is scored & data sources",
     skip:"skip", go_here:"go here",
@@ -468,6 +473,9 @@ const I18N={
     ge_cats:["Poissons","Champignons","Reptiles et amphibiens","Invertébrés","Mammifères","Plantes"],
     ge_all:"Tous sous-échantillonnés",
     ge_most:"⚖️ Le plus sous-représenté ici :",
+    zoom_scale:"🔍 Recalibrer les couleurs sur la vue actuelle",
+    zoom_scale_hint:`Classe les cellules par rapport à ce qui est à l'écran, pour faire ressortir les lacunes locales en zoomant. Désactivé = classement sur tout le Canada (une cellule foncée signifie la même chose partout).`,
+    legend_rel:"⚖ Couleurs recalibrées sur cette vue — non comparables aux autres niveaux de zoom.",
     map_brightness:"Luminosité de la carte",
     how_scored:"Calcul de l'impact et sources de données",
     skip:"à éviter", go_here:"y aller",
@@ -601,6 +609,7 @@ let GE_LOADED=false;
 async function loadGE(){if(GE_LOADED)return;const r=await fetchT(DATA_DIR+'webapp_data_gettingeven.json',15000),j=await r.json();
   for(const e of j.gettingeven)GE[gekey(e[0],e[1])]=[e[2],e[3]];GE_LOADED=true;}
 function geActive(){const e=document.getElementById('tgGettingEven');return!!(e&&e.checked);}
+function zoomScaleActive(){const e=document.getElementById('tgZoomScale');return!!(e&&e.checked);}
 function geColour(m){const v=GE[gekey(m.r[0],m.r[1])];if(!v)return GE_ALL;return v[0]<0?GE_ALL:(GE_PAL[v[0]]||GE_ALL);}
 // A cell in the bottom band of the national gap ranking (e.g. well-sampled cities) is a low
 // priority for the all-taxa mission -- but it's not worthless. Surface the two honest reasons
@@ -840,6 +849,21 @@ function recolour(){
     markers.forEach(m=>{const c=geColour(m);m.mk.setStyle({fillColor:c,color:c,weight:1,opacity:0.62,fillOpacity:0.62});});
     renderCellTable();return;
   }
+  // Viewport-relative ranking: rank cells only against what's currently on screen, so a
+  // Montrealer zoomed in sees local gaps instead of a uniformly low-priority map. Off-screen
+  // cells go faint (they recolour on moveend as they enter the view). Honest only with the
+  // legend note that colours aren't comparable across zoom levels (#1).
+  const rel=zoomScaleActive()&&!cov;
+  document.getElementById('legendrel').style.display=rel?'block':'none';
+  if(rel){
+    const b=map.getBounds(),inb=markers.filter(m=>b.contains([m.r[0],m.r[1]]));
+    const vv=inb.map(m=>impact(m.r));
+    const od=vv.map((v,i)=>[v,i]).sort((a,b)=>a[0]-b[0]);const rk=new Array(vv.length);od.forEach((p,k)=>rk[p[1]]=k);const m1=Math.max(vv.length-1,1);
+    const fl=od.length>0&&(od[od.length-1][0]-od[0][0])<1e-9;
+    const dim=colour(0);markers.forEach(m=>{m.t=0;m.mk.setStyle({fillColor:dim,color:dim,weight:1,opacity:.05,fillOpacity:.05});});
+    inb.forEach((m,i)=>{const t=fl?0:rk[i]/m1;m.t=t;const o=.25+.5*t,c=colour(t);m.mk.setStyle({fillColor:c,color:c,weight:1,opacity:o,fillOpacity:o});});
+    renderCellTable();return;
+  }
   const vals=markers.map(m=>impact(m.r));
   // Percentile-rank, not min-max: a few Arctic super-gaps (max discover + rare climate)
   // otherwise dominate the scale and crush every reachable cell to ~0/100. Rank spreads it evenly.
@@ -924,6 +948,9 @@ function setCoverage(){
 }
 document.getElementById('tgCoverage').addEventListener('change',e=>{if(e.target.checked)document.getElementById('tgGettingEven').checked=false;updateLegend();setCoverage();recolour();});
 document.getElementById('tgGettingEven').addEventListener('change',e=>{if(e.target.checked)document.getElementById('tgCoverage').checked=false;loadGE().then(()=>{setCoverage();updateLegend();recolour();});});
+document.getElementById('tgZoomScale').addEventListener('change',recolour);
+// Re-rank against the new viewport only while view-relative colouring is on (avoids the per-pan cost otherwise).
+map.on('moveend',()=>{if(zoomScaleActive()&&!geActive())recolour();});
 document.getElementById('baseop').addEventListener('input',e=>{baseOpacity=parseFloat(e.target.value);if(baseLayer&&baseLayer.setOpacity)baseLayer.setOpacity(baseOpacity);else if(glBase&&glBase.getCanvas())glBase.getCanvas().style.opacity=baseOpacity;document.getElementById('bopv').textContent=Math.round(baseOpacity*100)+'%';});
 ['tgRoads','tgLabels'].forEach(id=>document.getElementById(id).addEventListener('change',applyLayerToggles));
 document.getElementById('maxleg').addEventListener('change',e=>{state.maxLeg=parseFloat(e.target.value);replan();});
