@@ -8,7 +8,11 @@ cached experiment results in `cluster_results/` — no fabricated numbers, no ne
 needed (one optional live-iNat cell is guarded). Reproduce:
 
     .venv/bin/python _build_walkthrough.py
-    .venv/bin/jupyter nbconvert --to notebook --execute --inplace where-to-blitz-walkthrough.ipynb
+    .venv/bin/python -m nbconvert --to notebook --execute --inplace where-to-blitz-walkthrough.ipynb
+    .venv/bin/python -m nbconvert --to html --output where-to-blitz-walkthrough.html where-to-blitz-walkthrough.ipynb
+
+The HTML render is what the in-app "Full methodology" link points at (served on GitHub Pages);
+nbconvert 7.x renders the §0 mermaid diagram natively. Re-render it whenever the notebook changes.
 """
 import nbformat as nbf
 from nbformat.v4 import new_notebook, new_markdown_cell, new_code_cell
@@ -675,9 +679,10 @@ uv venv --python 3.11 .venv && uv pip install --python .venv/bin/python -r requi
 # 2. regenerate the national build from cluster_results/ca/ (deterministic, byte-identical)
 .venv/bin/python build_webapp.py          # → index.html
 
-# 3. rebuild + execute THIS walkthrough
+# 3. rebuild + execute THIS walkthrough, then render the HTML the in-app link points to
 .venv/bin/python _build_walkthrough.py
-.venv/bin/jupyter nbconvert --to notebook --execute --inplace where-to-blitz-walkthrough.ipynb
+.venv/bin/python -m nbconvert --to notebook --execute --inplace where-to-blitz-walkthrough.ipynb
+.venv/bin/python -m nbconvert --to html --output where-to-blitz-walkthrough.html where-to-blitz-walkthrough.ipynb
 ```
 
 The build is frozen by a manifest hash (printed in Section 1); the validation results read from
