@@ -13,9 +13,9 @@ FILES = CA_INDEX["files"]
 # rows: [lat, lon, discover, conservation, env, staleness, urgency, travel_min, n_train]
 OBJ = [
     {"key": "discover",     "name": "Discover the most species", "q": "go where few people have looked"},
-    {"key": "conservation", "name": "Find rare species",          "q": "\u26a0 placeholder \u2014 the national rarity layer isn't available yet, so this goal has no effect"},
+    {"key": "conservation", "name": "Find rare species",          "q": "go where COSEWIC/SARA species at risk concentrate"},
     {"key": "env",          "name": "Cover every habitat",        "q": "go where the climate is under-sampled"},
-    {"key": "staleness",    "name": "Freshest gaps",              "q": "\u26a0 placeholder \u2014 no per-record dates nationally; currently mirrors 'Discover', so don't weight both"},
+    {"key": "staleness",    "name": "Freshest gaps",              "q": "go where lots was recorded long ago but little lately (iNaturalist recent vs all-time density)"},
     {"key": "urgency",      "name": "Sample before it's lost",    "q": "go where forest cover was recently lost (logging, fire, dieback)"},
 ]
 # order matches OBJ: [discover, conservation, env, staleness, urgency]
@@ -977,8 +977,8 @@ function recolour(){
   // Percentile-rank, not min-max: a few Arctic super-gaps (max discover + rare climate)
   // otherwise dominate the scale and crush every reachable cell to ~0/100. Rank spreads it evenly.
   const ord=vals.map((v,i)=>[v,i]).sort((a,b)=>a[0]-b[0]);const rank=new Array(vals.length);ord.forEach((p,k)=>rank[p[1]]=k);const n1=Math.max(vals.length-1,1);
-  // If the chosen goal mix has no spatial signal (e.g. only a degenerate/placeholder axis like
-  // national conservation=0), rank would paint a fake index gradient -- show a flat map instead.
+  // If the chosen goal mix has no spatial signal (every cell scores the same), rank would paint
+  // a fake index gradient -- show a flat map instead.
   const flat=ord.length>0&&(ord[ord.length-1][0]-ord[0][0])<1e-9;   // guard empty markers (recolour runs during init before data loads)
   markers.forEach((m,i)=>{m.t=flat?0:rank[i]/n1;});   // national score, stable across pan/zoom
   const rel=zoomScaleActive()&&!cov;

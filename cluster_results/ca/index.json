@@ -50,8 +50,8 @@
     "travel_min": "REAL (Weiss 2018 travel-time)",
     "n_train": "REAL-proxy (density x cell km2)",
     "urgency": "REAL (Hansen loss fraction)",
-    "staleness": "PROXY = discover (no national per-record dates)",
-    "conservation": "APPROX (0; no national rarity/IUCN join)"
+    "staleness": "REAL (iNaturalist recent vs all-time density)",
+    "conservation": "REAL (CAN-SAR COSEWIC/SARA x GBIF occurrences)"
   },
   "group_to_cog": {
     "Amphibia": "Amphibia",
@@ -67,8 +67,9 @@
   },
   "land_mask": "Natural Earth 50m admin_0 (Canada+US land) AND iNat density COG data-footprint (dropped -9999 no-data cells, ~deep-US outside the Canadian COG)",
   "discover_method": "under-sampling rank (fewer obs=higher); zero-obs ties broken by climate distinctiveness (env). Replaces saturating norm(1/density).",
-  "staleness_method": "proxy = de-saturated discover (no national per-record dates); down-weighted in national presets",
+  "staleness_method": "(1 - recent/all-time) x log1p(all-time) from iNaturalist record counts (recent = last 5y); much recorded historically but little lately = higher",
   "real_groups": "Amphibia,Aves,Actinopterygii,Arachnida,Fungi,Insecta,Mammalia,Mollusca,Plantae,Reptilia (all real per-taxon iNat density COGs; Fungi+Reptilia no longer All-proxy)",
+  "density_vintage": "iNaturalist Dec-2025 (Biodiversite Quebec) for all groups except Fungi, held on its prior 1km vintage (no dec25 1km COG; the dec25 100m has incompatible per-pixel units)",
   "gettingeven": {
     "file": "webapp_data_gettingeven.json",
     "cats": [
