@@ -1,0 +1,31 @@
+name: Rebuild grid
+# Manually-triggered reproducible rebuild of the Canada grid (issue #58).
+# Streams density from the public Biodiversite Quebec bucket; fetches the Weiss travel raster
+# from the grid-inputs release; commits the regenerated cluster_results/ca + index.html.
+on:
+  workflow_dispatch:
+    inputs:
+      commit:
+        description: "Commit the regenerated grid back to the branch"
+        type: boolean
+        default: false
+jobs:
+  rebuild:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install deps
+        run: pip install -r requirements.txt
+      - name: Rebuild
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: ./rebuild_grid.sh
+      - name: Commit (optional)
+        if: ${{ inputs.commit }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add cluster_results/ca index.html && git commit -m "chore(data): rebuild grid from public sources" && git push
