@@ -25,7 +25,7 @@
     "Arachnida": "webapp_data_Arachnida.json",
     "Mollusca": "webapp_data_Mollusca.json"
   },
-  "n_cells": 31804,
+  "n_cells": 38128,
   "bbox": [
     -141.0,
     41.0,
@@ -44,42 +44,30 @@
     "travel_min",
     "n_train"
   ],
+  "land_mask": "iNaturalist density COG footprint (Biodiversite Quebec, current vintage); keeps every in-footprint cell incl. data-bearing water-edge urban cells (#58); US-side cells fall outside the Canada footprint.",
+  "discover_method": "under-sampling rank (fewer records = higher); zero-record ties broken by climate distinctiveness (env). Lexicographic n_train asc / env desc.",
+  "staleness_method": "iNaturalist recent-vs-all-time density (ca_staleness.csv); inverse-density proxy where absent.",
   "axes_status": {
-    "discover": "REAL \u2014 under-sampling rank from iNat density (zero-obs ties broken by climate distinctiveness)",
+    "discover": "REAL (under-sampling rank from iNaturalist density COG)",
+    "conservation": "REAL (COSEWIC/SARA at-risk richness, CAN-SAR x GBIF)",
     "env": "REAL (CHELSA climate surprisal, density-weighted)",
-    "travel_min": "REAL (Weiss 2018 travel-time)",
-    "n_train": "REAL-proxy (density x cell km2)",
-    "urgency": "REAL (Hansen loss fraction)",
     "staleness": "REAL (iNaturalist recent vs all-time density)",
-    "conservation": "REAL (CAN-SAR COSEWIC/SARA x GBIF occurrences)"
+    "urgency": "REAL (Hansen loss fraction)",
+    "travel_min": "REAL (Weiss 2018 travel-time)",
+    "n_train": "REAL-proxy (cell-mean density x cell km2)"
   },
   "group_to_cog": {
-    "Amphibia": "Amphibia",
+    "All biodiversity": "All",
+    "Plantae": "Plantae",
+    "Insecta": "Insecta",
     "Aves": "Aves",
     "Fungi": "Fungi",
-    "Insecta": "Insecta",
     "Mammalia": "Mammalia",
-    "Plantae": "Plantae",
-    "Reptilia": "Reptilia",
     "Actinopterygii": "Actinopterygii",
+    "Reptilia": "Reptilia",
+    "Amphibia": "Amphibia",
     "Arachnida": "Arachnida",
     "Mollusca": "Mollusca"
   },
-  "land_mask": "Natural Earth 50m admin_0 (Canada+US land) AND iNat density COG data-footprint (dropped -9999 no-data cells, ~deep-US outside the Canadian COG)",
-  "discover_method": "under-sampling rank (fewer obs=higher); zero-obs ties broken by climate distinctiveness (env). Replaces saturating norm(1/density).",
-  "staleness_method": "(1 - recent/all-time) x log1p(all-time) from iNaturalist record counts (recent = last 5y); much recorded historically but little lately = higher",
-  "real_groups": "Amphibia,Aves,Actinopterygii,Arachnida,Fungi,Insecta,Mammalia,Mollusca,Plantae,Reptilia (all real per-taxon iNat density COGs; Fungi+Reptilia no longer All-proxy)",
-  "density_vintage": "iNaturalist Dec-2025 (Biodiversite Quebec) for all groups except Fungi, held on its prior 1km vintage (no dec25 1km COG; the dec25 100m has incompatible per-pixel units)",
-  "gettingeven": {
-    "file": "webapp_data_gettingeven.json",
-    "cats": [
-      "Fishes",
-      "Fungi",
-      "Reptiles & Amphibians",
-      "Invertebrates",
-      "Mammals",
-      "Plants"
-    ],
-    "method": "per-cell most under-represented group by RELATIVE deficit (1 - local_share/expected_share); birds excluded; -1=all under-sampled (zero obs)"
-  }
+  "density_vintage": "iNaturalist (Biodiversite Quebec) inat_canada_heatmaps, current public vintage, average-resampled 1km->0.25deg"
 }
