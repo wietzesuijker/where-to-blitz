@@ -871,20 +871,22 @@ async function fetchGapTree(lat,lon){
   const box=(h)=>`swlat=${lat-h}&nelat=${lat+h}&swlng=${lon-h}&nelng=${lon+h}`;
   const base='https://api.inaturalist.org/v1/observations/species_counts?quality_grade=research&taxon_geoprivacy=open&threatened=false&order_by=count';
   try{
-    // cell numerator: one uncapped page aggregated by group; neighbourhood denominator:
-    // accurate distinct-species count per group via total_results (per_page page-cap would
-    // truncate rich groups and make cell>nbhd, so query each group's true total separately).
-    // Both legs swallow their own errors -> one slow/failed call degrades a single group (or the
-    // cell numerator) instead of blanking the whole tree the way an un-caught reject used to.
-    let cellFail=false,nbFail=0;
+    // Two calls total (issue #56): the cell numerator and the neighbourhood denominator are each ONE
+    // species_counts page aggregated by group client-side. The old version made one total_results call
+    // per iconic group (~10 extra requests on EVERY tap), which flooded iNaturalist's per-IP rate limit
+    // during normal browsing and left the popup stuck on "Reading taxonomic coverage…". The neighbourhood
+    // count is now a top-500 sample per box rather than exact per-group totals -- approximate for very
+    // rich areas (a dense group can cap at its share of 500), fine as a coverage heuristic and revisitable
+    // when the goal calculations are finalised (#49). Each leg swallows its own error.
+    let cellFail=false,nbFail=false;
     const cellP=jget(`${base}&${box(HH)}&per_page=500`).catch(()=>{cellFail=true;return{results:[]};});
-    const nbP=Promise.all(groups.map(g=>jget(`${base}&${box(R)}&iconic_taxa=${g}&per_page=1`).then(j=>[g,j.total_results||0]).catch(()=>{nbFail++;return[g,0];})));
-    const [cj,nbArr]=await Promise.all([cellP,nbP]);
+    const nbP=jget(`${base}&${box(R)}&per_page=500`).catch(()=>{nbFail=true;return{results:[]};});
+    const [cj,nj]=await Promise.all([cellP,nbP]);
     if(myseq!==gapSeq)return;
-    // total outage (every call failed) -> "tap again", not a misleading "too few records here".
-    if(cellFail&&nbFail===groups.length){paintGapTree(el,null);return;}
+    // total outage (both calls failed) -> "tap again", not a misleading "too few records here".
+    if(cellFail&&nbFail){paintGapTree(el,null);return;}
     const cell={};(cj.results||[]).forEach(r=>{const g=r.taxon&&r.taxon.iconic_taxon_name;if(g)cell[g]=(cell[g]||0)+1;});
-    const nbhd=Object.fromEntries(nbArr);
+    const nbhd={};(nj.results||[]).forEach(r=>{const g=r.taxon&&r.taxon.iconic_taxon_name;if(g)nbhd[g]=(nbhd[g]||0)+1;});
     const elig=groups.filter(g=>nbhd[g]>=3&&GR[g]);
     let sumC=0,sumN=0;elig.forEach(g=>{sumC+=Math.min(cell[g]||0,nbhd[g]);sumN+=nbhd[g];});
     const rate=sumC>0?sumC/sumN:0;   // this cell's overall coverage rate; normalise so an avg group sits at 1
