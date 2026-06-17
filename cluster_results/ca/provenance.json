@@ -12,7 +12,7 @@
   },
   "sources": {
     "discover/env/urgency/travel": {
-      "datasets": "iNat density COG (Biodiversite Quebec STAC), CHELSA bioclimate, Hansen Global Forest Change, Weiss et al. 2018 travel-time",
+      "datasets": "iNat density COG (Biodiversite Quebec, Dec-2025 vintage; Fungi on prior 1km), CHELSA bioclimate, Hansen Global Forest Change, Weiss et al. 2018 travel-time",
       "builder": "build_fullgrid_ca.py"
     },
     "conservation": {

@@ -27,10 +27,10 @@ Each cell carries five axes; you blend them into a 0–100 impact score (a perce
 | Cover every habitat (climate coverage) | CHELSA climate | real |
 | Sample before it's lost (urgency) | Hansen forest loss | real |
 | Travel time | Weiss et al. 2018 | real |
-| Find rare species (conservation) | — | placeholder (no national rarity layer yet) |
-| Freshest gaps (staleness) | — | placeholder (no per-record dates nationally) |
+| Find rare species (conservation) | CAN-SAR (COSEWIC/SARA) × GBIF occurrences | real |
+| Freshest gaps (staleness) | iNaturalist recent vs all-time density | real |
 
-The two placeholders are flagged as such in the UI.
+All five goal axes are real; none are placeholders.
 
 ## Build
 
