@@ -1470,6 +1470,8 @@ function setView(v){
   document.getElementById('tripui').style.display=v==='plan'?'':'none';
   for(const [id,vv] of [['vexplore','explore'],['vplan','plan'],['vcompare','compare']]){const b=document.getElementById(id);b.classList.toggle('on',v===vv);b.setAttribute('aria-pressed',v===vv);}
   if(v!=='plan')clearRoute();
+  // #40: the side panel isn't shown over Compare goals, so hide its collapse toggle there; restore it for Explore/Plan.
+  const ptog=document.getElementById('panelToggle');if(ptog)ptog.style.display=v==='compare'?'none':'';
   if(v==='compare')renderInsights(); else map.invalidateSize();
 }
 document.getElementById('vexplore').onclick=()=>setView('explore');
