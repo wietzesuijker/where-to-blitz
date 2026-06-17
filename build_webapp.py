@@ -709,7 +709,7 @@ function relabelDynamic(){
   // rows are cached, so this is zero-network. A cell tap lives in the popup (#popsp); the plan-mode
   // "around my start" list lives in the sidebar (#prospects).
   if(typeof fetchProspects!=='function'){}
-  else if(_lastProspect&&_lastProspect.toPopup){if(document.getElementById('popsp'))fetchProspects(_lastProspect.lat,_lastProspect.lon,_lastProspect.whereKey,{toPopup:true});}
+  else if(_lastProspect&&_lastProspect.toPopup&&_lastProspect.spEl&&_lastProspect.spEl.isConnected){fetchProspects(_lastProspect.lat,_lastProspect.lon,_lastProspect.whereKey,{toPopup:true,spEl:_lastProspect.spEl,gapsEl:_lastProspect.gapsEl});}
   else if(pr&&pr.dataset.idle==='1')pr.innerHTML='<div class="hd" style="margin-top:10px" data-i18n="prospects_idle">'+t('prospects_idle')+'</div>';
   else if(pr&&_lastProspect)fetchProspects(_lastProspect.lat,_lastProspect.lon,_lastProspect.whereKey,{toPopup:false});
 }
@@ -790,13 +790,17 @@ const safeImg=u=>{u=String(u==null?'':u);return /^https:\/\//.test(u)?esc(u):'';
 async function fetchProspects(lat,lon,whereKey,opts){
   const myseq=++prospectSeq;
   const toPopup=!!(opts&&opts.toPopup);
-  _lastProspect={lat,lon,whereKey,toPopup};   // remember the open panel so setLang can re-render it in the new language
+  // For a cell tap, paint into the persistent popup element refs passed by exploreCell, NOT a
+  // getElementById lookup: Leaflet rebuilds the popup content node during the autoPan/setView churn
+  // of a tap, so a queried node goes stale mid-fetch and the on-screen popup keeps loading (#56).
+  const spEl=(opts&&opts.spEl)||null, gapsEl=(opts&&opts.gapsEl)||null;
+  _lastProspect={lat,lon,whereKey,toPopup,spEl,gapsEl};   // remember the open panel so setLang can re-render it in the new language
   const where=t(WHERE_LBL[whereKey]||'here');
-  const pr=document.getElementById(toPopup?'popsp':'prospects'); if(!pr) return;   // popup closed -> nothing to fill
+  const pr=toPopup?spEl:document.getElementById('prospects'); if(!pr) return;   // popup closed -> nothing to fill
   const msg=s=>toPopup?'<div class="popsec">'+s+'</div>':'<div class="hd">'+s+'</div>';   // .hd is dark-on-dark (sidebar); .popsec reads on the light popup
   if(!toPopup) pr.dataset.idle='0';
   pr.innerHTML=msg(t('prospects_lookup'));
-  if(toPopup) fetchGapTree(lat,lon);   // the coverage-by-group tree only lives in the popup now
+  if(toPopup) fetchGapTree(lat,lon,gapsEl);   // the coverage-by-group tree only lives in the popup now
   const T_here=n=>t('here_count',n),T_world=g=>t('worldwide',g.toLocaleString(LANG==='fr'?'fr-CA':'en-CA'));
   const L_rare=t('rare'),L_unc=t('uncommon'),L_nearby=t('nearby_lbl');
   const ic=ICONIC[state.taxon]||'', HH=0.125;
@@ -861,9 +865,12 @@ function paintGapTree(el,rows){
       return `<button class="gtrow ${cls(r.cov)}" data-g="${esc(r.g)}" aria-label="${esc(groupName(r.g))}: ${t('gt_count',r.c,r.n)}, ${lab(r.cov)}. ${t('gt_switch',groupName(r.g))}"><span class="gtn">${esc(groupName(r.g))}</span><span class="gtbar"><span style="width:${pct}%"></span></span><span class="gtc">${t('gt_count',r.c,r.n)} · ${lab(r.cov)}</span></button>`;}).join('')+'</div></div>';
   el.querySelectorAll('.gtrow').forEach(b=>b.onclick=()=>{const g=b.dataset.g;if(!FILES[g]||state.taxon===g)return;taxonSel.value=g;taxonSel.onchange();});
 }
-async function fetchGapTree(lat,lon){
+async function fetchGapTree(lat,lon,el){
   const myseq=++gapSeq;
-  const el=document.getElementById('popgaps'); if(!el) return;   // popup container; closed -> nothing to fill
+  // `el` is the PERSISTENT popup element passed by exploreCell, not a getElementById lookup: Leaflet
+  // rebuilds the popup content node during the autoPan/setView churn of a tap, so a queried node goes
+  // stale mid-fetch and the on-screen popup keeps its loading text (issue #56).
+  if(!el) return;   // popup container; closed -> nothing to fill
   const ck=gtkey(lat,lon);
   if(GT_CACHE[ck]!==undefined){paintGapTree(el,GT_CACHE[ck]);return;}
   el.innerHTML='<div class="popsec">'+t('gaptree_lookup')+'</div>';
@@ -1448,15 +1455,21 @@ function exploreCell(lat,lon){
   const o=best,dest=[o.r[0],o.r[1]];clearRoute();
   try{history.replaceState(null,'','?at='+dest[0].toFixed(3)+','+dest[1].toFixed(3)+'&g='+encodeURIComponent(state.taxon));}catch(e){}
   destCell=L.rectangle([[dest[0]-0.125,dest[1]-0.125],[dest[0]+0.125,dest[1]+0.125]],{color:'#1b7837',weight:2,dashArray:'5 5',fillColor:'#74c476',fillOpacity:0.16,interactive:false}).addTo(map);
-  // Issue #44: the popup holds the per-cell coverage tree (#popgaps) and the rarest species (#popsp), both
-  // filled async by fetchProspects/fetchGapTree. Centre the cell first (animate:false so it doesn't race
-  // autoPan), then openPopup autoPans with top padding so the popup clears the view toggle / info button.
+  // Issue #44/#56: the popup holds the per-cell coverage tree and the rarest species, filled async. Pass
+  // the content as a PERSISTENT element (not an HTML string) and keep refs to the two child containers:
+  // Leaflet re-appends an element on each update() (autoPan/setView churn) but rebuilds a string from
+  // scratch, which detached the captured nodes mid-fetch and left the popup stuck on loading. Centre the
+  // cell first (animate:false so it doesn't race autoPan), then openPopup autoPans with top padding.
+  const popDiv=document.createElement('div');
+  const popGaps=document.createElement('div'); popGaps.id='popgaps'; popGaps.innerHTML='<div class="popsec">'+t('gaptree_lookup')+'</div>';
+  const popSp=document.createElement('div'); popSp.id='popsp'; popSp.innerHTML='<div class="popsec">'+t('prospects_lookup')+'</div>';
+  popDiv.appendChild(popGaps); popDiv.appendChild(popSp);
   destMarker=L.marker(dest,{icon:destIcon,zIndexOffset:900}).addTo(map)
-    .bindPopup(`<div id="popgaps"><div class="popsec">${t('gaptree_lookup')}</div></div><div id="popsp"><div class="popsec">${t('prospects_lookup')}</div></div>`,{maxWidth:300,minWidth:272,autoPanPaddingTopLeft:[18,96],autoPanPaddingBottomRight:[18,40]});
+    .bindPopup(popDiv,{maxWidth:300,minWidth:272,autoPanPaddingTopLeft:[18,96],autoPanPaddingBottomRight:[18,40]});
   map.setView(dest,map.getZoom(),{animate:false});
   destMarker.openPopup();
   _reselect=false;
-  fetchProspects(dest[0],dest[1],'destination',{toPopup:true});
+  fetchProspects(dest[0],dest[1],'destination',{toPopup:true,spEl:popSp,gapsEl:popGaps});
 }
 function setView(v){
   state.view=v;
