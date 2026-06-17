@@ -8,7 +8,12 @@ cached experiment results in `cluster_results/` — no fabricated numbers, no ne
 needed (one optional live-iNat cell is guarded). Reproduce:
 
     .venv/bin/python _build_walkthrough.py
-    .venv/bin/jupyter nbconvert --to notebook --execute --inplace where-to-blitz-walkthrough.ipynb
+    .venv/bin/python -m nbconvert --to notebook --execute --inplace where-to-blitz-walkthrough.ipynb
+    .venv/bin/python render_walkthrough_html.py    # → where-to-blitz-walkthrough.html (with figure alt text)
+
+The HTML render is what the in-app "Full methodology" link points at (served on GitHub Pages);
+nbconvert 7.x renders the §0 mermaid diagram natively. render_walkthrough_html.py wraps nbconvert
+and adds alt text to the figures for screen-reader users. Re-render whenever the notebook changes.
 """
 import nbformat as nbf
 from nbformat.v4 import new_notebook, new_markdown_cell, new_code_cell
@@ -30,7 +35,8 @@ observation adds the most to what we know about the natural world?"* — into a 
 explore, and plan a real low-carbon trip on.
 
 If you build, score, or run the campaign — this is the methodology and the data underneath it,
-laid out so you can check every choice and reproduce every number.
+laid out so you can check every choice and reproduce every number. Prefer a terse formula
+reference? See [`METHODOLOGY.md`](https://github.com/PollockLab/where-to-blitz/blob/main/METHODOLOGY.md).
 
 > It is a **work-in-progress prototype and a planning aid, not ground truth.**
 > It is a *planning aid*. The responsible-use guardrails are part of the design, not an afterthought (last section).
@@ -675,9 +681,10 @@ uv venv --python 3.11 .venv && uv pip install --python .venv/bin/python -r requi
 # 2. regenerate the national build from cluster_results/ca/ (deterministic, byte-identical)
 .venv/bin/python build_webapp.py          # → index.html
 
-# 3. rebuild + execute THIS walkthrough
+# 3. rebuild + execute THIS walkthrough, then render the HTML the in-app link points to
 .venv/bin/python _build_walkthrough.py
-.venv/bin/jupyter nbconvert --to notebook --execute --inplace where-to-blitz-walkthrough.ipynb
+.venv/bin/python -m nbconvert --to notebook --execute --inplace where-to-blitz-walkthrough.ipynb
+.venv/bin/python render_walkthrough_html.py    # → where-to-blitz-walkthrough.html (adds figure alt text)
 ```
 
 The build is frozen by a manifest hash (printed in Section 1); the validation results read from
