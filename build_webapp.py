@@ -246,8 +246,8 @@ details.adv>summary:hover{color:var(--ink)}
 <div id="panel" role="main"><div id="panelInner">
   <div class="langtoggle" role="group" data-i18n-aria="aria_language" aria-label="Language"><button id="lang-en" type="button">EN</button><button id="lang-fr" type="button">FR</button></div>
   <h1 data-i18n-html="title_full">Where to <a href="https://blitzthegap.org" target="_blank" rel="noopener" style="color:var(--gd);text-decoration:underline">Blitz the Gap</a></h1>
-  <div class="sechd"><span class="sec" data-i18n="sec_taxon">Taxon</span></div>
-  <select id="taxon" class="full" data-i18n-aria="aria_lifegroup" aria-label="Taxon" style="margin-bottom:8px"></select>
+  <div class="sechd"><span class="sec" data-i18n="sec_taxon">Species group</span></div>
+  <select id="taxon" class="full" data-i18n-aria="aria_lifegroup" aria-label="Species group" style="margin-bottom:8px"></select>
   <div class="sechd"><span class="sec" data-i18n="sec_goal">Goal</span><span class="infobtn" data-i18n-title="info_btn" title="Where do these scores come from?" role="button" tabindex="0" data-i18n-aria="aria_about_data" aria-label="About the data" aria-expanded="false" onclick="const b=document.getElementById('taxinfo').classList.toggle('open');this.setAttribute('aria-expanded',b)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click();}">i</span></div>
   <div class="infobox" id="taxinfo" data-i18n-html="taxinfo">
     <b>Where the scores come from.</b> <b style="color:var(--ink)">Higher priority = a spot where a new sighting adds more to what we know.</b> Canada-wide, on a 0.25° (~25&nbsp;km) grid.
@@ -323,8 +323,10 @@ details.adv>summary:hover{color:var(--ink)}
     <label class="toggle" style="display:none"><input type="checkbox" id="tgGettingEven"> <span data-i18n="getting_even">Getting Even — which group to record</span></label><!-- driven by the "Getting Even" criterion (#20) -->
     <div style="display:none" data-i18n="ge_hint">Each cell is coloured by the most under-represented taxonomic group there (birds excluded — already well covered by eBird) — our finer-resolution take on the official "Getting Even" challenge. From iNaturalist observation density: a sample, not a census.</div>
     <div class="infobox" id="geinfo" data-i18n-html="ge_method"></div>
-    <div style="display:flex;justify-content:space-between;margin:9px 0 0"><span id="bople" style="font-size:13px" data-i18n="map_brightness">Map brightness</span><span class="v" id="bopv" style="color:var(--acc)">100%</span></div>
-    <input type="range" id="baseop" min="0.1" max="1" step="0.05" value="1" data-i18n-aria="aria_map_brightness" aria-label="Map brightness">
+    <div id="opacityRow" style="display:none"><!-- #46: only shown while a data overlay (density style) is active; basemap brightness is otherwise locked at 100% -->
+    <div style="display:flex;justify-content:space-between;margin:9px 0 0"><span id="bople" style="font-size:13px" data-i18n="data_opacity">Density opacity</span><span class="v" id="bopv" style="color:var(--acc)">80%</span></div>
+    <input type="range" id="baseop" min="0.1" max="1" step="0.05" value="1" data-i18n-aria="aria_data_opacity" aria-label="Density opacity">
+    </div>
   </details>
 
   <div id="celltable" class="sronly" role="region" data-i18n-aria="aria_top_cells" aria-label="Top cells (accessible list)"></div>
@@ -358,7 +360,7 @@ const I18N={
   en:{
     title_full:`Where to <a href="https://blitzthegap.org" target="_blank" rel="noopener" style="color:var(--gd);text-decoration:underline">Blitz the Gap</a>`,
     sub:"Choose what counts as <b>impact</b>, then <b>explore</b> the priority map — or <b>plan a trip</b> to the best spot you can reach and get back from.",
-    sec_group:"Life group & goal", sec_taxon:"Taxon", sec_goal:"Goal",
+    sec_group:"Life group & goal", sec_taxon:"Species group", sec_goal:"Goal",
     info_btn:"Where do these scores come from?",
     taxinfo:`<b>Where the scores come from.</b> <b style="color:var(--ink)">Higher priority = a spot where a new sighting adds more to what we know.</b> Canada-wide, on a 0.25° (~25&nbsp;km) grid.
       <ul>
@@ -374,7 +376,7 @@ const I18N={
     my_location:"Locate me",
     start_alt:"Trip start — drag to move", start_tip:"Start — drag me, or tap the map",
     aria_site_notice:"Site notice", aria_dismiss:"Dismiss notice", aria_dismiss_short:"Dismiss",
-    aria_language:"Language", aria_about_data:"About the data", aria_lifegroup:"Taxon", aria_criteria:"Criteria",
+    aria_language:"Language", aria_about_data:"About the data", aria_lifegroup:"Species group", aria_criteria:"Criteria",
     aria_search:"Search for a start place", aria_search_results:"Search results", aria_time_unit:"Time unit",
     aria_time_budget:"Time budget", aria_max_travel:"Max travel each way", aria_worth_drive:"Worth the drive",
     aria_map_style:"Map style", aria_map_brightness:"Map brightness", aria_data_opacity:"Density opacity", aria_top_cells:"Top cells (accessible list)",
@@ -507,7 +509,7 @@ const I18N={
   fr:{
     title_full:`Où aller pour <a href="https://blitzthegap.org" target="_blank" rel="noopener" style="color:var(--gd);text-decoration:underline">Blitz the Gap</a>`,
     sub:"Choisissez ce qui compte comme <b>impact</b>, puis <b>explorez</b> la carte des priorités — ou <b>planifiez une sortie</b> vers le meilleur endroit que vous pouvez atteindre et d'où vous pouvez revenir.",
-    sec_group:"Groupe d'espèces et objectif", sec_taxon:"Taxon", sec_goal:"Objectif",
+    sec_group:"Groupe d'espèces et objectif", sec_taxon:"Groupe d'espèces", sec_goal:"Objectif",
     info_btn:"D'où viennent ces scores?",
     taxinfo:`<b>D'où viennent les scores.</b> <b style="color:var(--ink)">Priorité élevée = un endroit où une nouvelle observation ajoute le plus à nos connaissances.</b> À l'échelle du Canada, sur une grille de 0,25° (~25&nbsp;km).
       <ul>
@@ -523,7 +525,7 @@ const I18N={
     my_location:"Me localiser",
     start_alt:"Départ de la sortie — glissez pour déplacer", start_tip:"Départ — glissez-moi, ou touchez la carte",
     aria_site_notice:"Avis du site", aria_dismiss:"Fermer l'avis", aria_dismiss_short:"Fermer",
-    aria_language:"Langue", aria_about_data:"À propos des données", aria_lifegroup:"Taxon", aria_criteria:"Critère",
+    aria_language:"Langue", aria_about_data:"À propos des données", aria_lifegroup:"Groupe d'espèces", aria_criteria:"Critère",
     aria_search:"Rechercher un lieu de départ", aria_search_results:"Résultats de recherche", aria_time_unit:"Unité de temps",
     aria_time_budget:"Temps disponible", aria_max_travel:"Trajet max (aller)", aria_worth_drive:"Vaut le déplacement",
     aria_map_style:"Style de carte", aria_map_brightness:"Luminosité de la carte", aria_data_opacity:"Opacité des données", aria_top_cells:"Meilleures cellules (liste accessible)",
@@ -1168,6 +1170,9 @@ function updateOpacityControl(){
   const sl=document.getElementById('baseop'),lab=document.getElementById('bople'),val=document.getElementById('bopv');
   if(!sl||!lab||!val)return;
   const ov=dataOverlayActive();
+  const row=document.getElementById('opacityRow');
+  if(row)row.style.display=ov?'':'none';   // #46(b): the slider only appears with a data overlay; lock basemap brightness at 100% otherwise
+  if(!ov){baseOpacity=1;if(baseLayer&&baseLayer.setOpacity)baseLayer.setOpacity(1);else if(glBase&&glBase.getCanvas())glBase.getCanvas().style.opacity=1;}
   const v=ov?covOpacity:baseOpacity;
   sl.value=v;
   lab.textContent=t(ov?'data_opacity':'map_brightness');
