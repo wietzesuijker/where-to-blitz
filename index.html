@@ -364,7 +364,7 @@ const I18N={
     gaptree_err:"Couldn’t read coverage just now — tap the cell again.",
     pop_groups_hd:"Four least sampled groups", pop_rare_hd:"Four most rarely logged species",
     gt_gap:"gap", gt_partial:"partial", gt_ok:"well recorded",
-    gt_count:(c,n)=>`${c} of ~${n} nearby`,
+    gt_count:(c,n)=>`${c} here · ~${n} nearby`,   // two observed iNat record tallies, not a ratio-of-total: "X of ~Y" wrongly read as complete coverage at equality (5 of ~5). ~Y is a floor, never true richness.
     gt_switch:(g)=>`Switch the map to ${g}`,
     map_style:"Map style",
     style_standard:"Standard", style_satellite:"Satellite", style_terrain:"Terrain", style_inat_density:"iNaturalist sampling density",
@@ -513,7 +513,7 @@ const I18N={
     gaptree_err:"Lecture de la couverture impossible pour l’instant — touchez la cellule à nouveau.",
     pop_groups_hd:"Quatre groupes les moins échantillonnés", pop_rare_hd:"Quatre espèces les plus rarement observées",
     gt_gap:"lacune", gt_partial:"partielle", gt_ok:"bien documenté",
-    gt_count:(c,n)=>`${c} sur ~${n} à proximité`,
+    gt_count:(c,n)=>`${c} ici · ~${n} à proximité`,
     gt_switch:(g)=>`Afficher ${g} sur la carte`,
     map_style:"Style de carte",
     style_standard:"Standard", style_satellite:"Satellite", style_terrain:"Relief", style_inat_density:"Densité d'échantillonnage iNaturalist",
