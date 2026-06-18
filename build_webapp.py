@@ -173,8 +173,12 @@ details.adv>summary:hover{color:var(--ink)}
 /* Issue #44: per-cell coverage + rare species live in the popup. Headings, a scroll-capped group list, and a 4-up species grid (no horizontal scroll). */
 .popsec{font-size:12px;font-weight:700;color:#0a2a44;margin:9px 0 5px}
 .popsec:first-child{margin-top:1px}
-.popscroll{max-height:150px;overflow-y:auto}
+.popscroll{max-height:150px;overflow:hidden auto}
 .popscroll .gaptree{margin-top:0}
+/* #44 popup is ~258px wide: tighten the row so the coverage bar stays visible and the name never clips/side-scrolls (status word dropped from the count — see paintGapTree). */
+.popscroll .gtrow{grid-template-columns:84px 1fr auto;gap:7px;padding:5px 8px}
+.popscroll .gtn{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.popscroll .gtbar{min-width:22px}
 .popgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
 .popgrid a{text-decoration:none;color:#0a2a44;display:block}
 .popgrid img{width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:7px;border:1px solid #cdd;display:block;background:#eee}
@@ -844,7 +848,7 @@ function paintGapTree(el,rows){
   // Issue #44: rows are sorted biggest-gap first; cap the popup at the four least-sampled groups, scroll for the rest.
   el.innerHTML='<div class="popsec">'+t('pop_groups_hd')+'</div>'+
     '<div class="popscroll"><div class="gaptree">'+rows.map(r=>{const pct=Math.round(Math.min(1,r.cov)*100);
-      return `<button class="gtrow ${cls(r.cov)}" data-g="${esc(r.g)}" aria-label="${esc(groupName(r.g))}: ${t('gt_count',r.c,r.n)}, ${lab(r.cov)}. ${t('gt_switch',groupName(r.g))}"><span class="gtn">${esc(groupName(r.g))}</span><span class="gtbar"><span style="width:${pct}%"></span></span><span class="gtc">${t('gt_count',r.c,r.n)} · ${lab(r.cov)}</span></button>`;}).join('')+'</div></div>';
+      return `<button class="gtrow ${cls(r.cov)}" data-g="${esc(r.g)}" aria-label="${esc(groupName(r.g))}: ${t('gt_count',r.c,r.n)}, ${lab(r.cov)}. ${t('gt_switch',groupName(r.g))}"><span class="gtn">${esc(groupName(r.g))}</span><span class="gtbar"><span style="width:${pct}%"></span></span><span class="gtc">${t('gt_count',r.c,r.n)}</span></button>`;}).join('')+'</div></div>';
   el.querySelectorAll('.gtrow').forEach(b=>b.onclick=()=>{const g=b.dataset.g;if(!FILES[g]||state.taxon===g)return;taxonSel.value=g;taxonSel.onchange();});
 }
 async function fetchGapTree(lat,lon,el){
@@ -1447,7 +1451,7 @@ function exploreCell(lat,lon){
   const popSp=document.createElement('div'); popSp.id='popsp'; popSp.innerHTML='<div class="popsec">'+t('prospects_lookup')+'</div>';
   popDiv.appendChild(popGaps); popDiv.appendChild(popSp);
   destMarker=L.marker(dest,{icon:destIcon,zIndexOffset:900}).addTo(map)
-    .bindPopup(popDiv,{maxWidth:300,minWidth:272,autoPanPaddingTopLeft:[18,96],autoPanPaddingBottomRight:[18,40]});
+    .bindPopup(popDiv,{maxWidth:320,minWidth:288,autoPanPaddingTopLeft:[18,96],autoPanPaddingBottomRight:[18,40]});
   map.setView(dest,map.getZoom(),{animate:false});
   destMarker.openPopup();
   _reselect=false;
