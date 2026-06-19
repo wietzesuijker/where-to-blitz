@@ -32,7 +32,7 @@
 :root{--bg:#0f1620;--panel:#172230;--ink:#e8eef5;--mut:#9fb2c6;--acc:rgb(139,168,132);--gd:#22c55e;--gold:#f0a000}
 *{box-sizing:border-box}
 html,body{margin:0;height:100%;font-family:'Inter',-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink)}
-h1,.sec,.sechd .sec,.popsec,#viewtoggle button,.langtoggle button{font-family:'Space Grotesk','Inter',sans-serif}
+h1,.sec,.sechd .sec,.popsec,#viewtoggle button,#langbtn{font-family:'Space Grotesk','Inter',sans-serif}
 :root{--bh:30px}
 #protobar{position:fixed;top:0;left:0;right:0;height:30px;z-index:3000;display:flex;align-items:center;justify-content:center;gap:10px;background:#e99002;color:#231900;font-size:12px;font-weight:600;padding:0 12px;white-space:nowrap;overflow:hidden;box-shadow:0 1px 5px rgba(0,0,0,.35)}
 #protobar button{background:rgba(0,0,0,.22);border:0;color:inherit;border-radius:5px;cursor:pointer;font-size:14px;line-height:1;padding:1px 7px;flex:none}
@@ -42,17 +42,20 @@ h1,.sec,.sechd .sec,.popsec,#viewtoggle button,.langtoggle button{font-family:'S
 /* The rounded card and the scroller are separate elements: a scrolling element with border-radius
    leaves a square-cornered paint seam at the top in Chromium, so #panel only rounds/clips (overflow:hidden,
    no scroll) and #panelInner does the scrolling inside it. */
-#panel{position:absolute;z-index:1100;top:12px;left:12px;width:336px;max-height:calc(100% - 24px);display:flex;flex-direction:column;overflow:hidden;background:var(--panel);border-radius:12px;border:1px solid #2a3a4d;box-shadow:0 6px 22px rgba(0,0,0,.5)}
+#panel{position:absolute;z-index:1100;top:12px;left:12px;width:300px;max-height:calc(100% - 24px);display:flex;flex-direction:column;overflow:hidden;background:var(--panel);border-radius:12px;border:1px solid #2a3a4d;box-shadow:0 6px 22px rgba(0,0,0,.5)}
 #panelInner{flex:1 1 auto;min-height:0;overflow-y:auto;padding:14px 15px 18px}
 #map{flex:1;height:100%}
-#panelToggle{position:fixed;top:calc(var(--bh) + 18px);left:336px;z-index:1300;width:26px;height:26px;border-radius:50%;background:var(--panel);color:var(--ink);border:1px solid #2a3a4d;cursor:pointer;font-size:15px;line-height:24px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,.35);padding:0}
+#panelToggle{position:fixed;top:calc(var(--bh) + 18px);left:300px;z-index:1300;width:26px;height:26px;border-radius:50%;background:var(--panel);color:var(--ink);border:1px solid #2a3a4d;cursor:pointer;font-size:15px;line-height:24px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,.35);padding:0}
 #panelToggle:hover{border-color:var(--acc);color:var(--acc)}
 #panelToggle:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 body.panel-collapsed #panel{display:none}
 body.panel-collapsed #panelToggle{left:8px;transform:none}
 body.panel-collapsed #map{flex:1;height:100%}
 body.panel-collapsed #loading{left:50%}
-h1{font-size:20.5px;margin:0 0 2px}
+h1{font-size:20.5px;line-height:1.16;margin:0 0 2px}
+.titlerow{display:flex;align-items:center;gap:10px;margin-bottom:2px}
+.titlerow h1{flex:1 1 auto;margin:0}
+.titlerow .logo{flex:0 0 auto;width:56px;height:56px;object-fit:contain}
 .sub{color:var(--mut);font-size:14px;line-height:1.45;margin:0 0 8px}
 .sec{font-size:12.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);margin:14px 0 8px;font-weight:700}
 select{padding:7px 8px;background:#0e1722;color:var(--ink);border:1px solid #2a3a4d;border-radius:7px;font-size:16px}
@@ -71,10 +74,19 @@ input[type=range]{width:100%;accent-color:var(--acc);margin:0}
 .startrow button{flex:1;background:#10203044;color:var(--ink);border:1px solid #2a3a4d;border-radius:7px;padding:7px;font-size:14px;cursor:pointer}
 .startrow button:hover{border-color:var(--gd)}
 .startrow button.on{border-color:var(--gd);background:var(--gd);color:#04220f;font-weight:700}
-.langtoggle{display:flex;gap:4px;float:right;margin:2px 0 0}
-.langtoggle button{background:#10203044;color:var(--mut);border:1px solid #2a3a4d;border-radius:6px;padding:3px 9px;font-size:12.5px;font-weight:700;cursor:pointer;letter-spacing:.03em}
-.langtoggle button:hover{border-color:var(--acc);color:var(--ink)}
-.langtoggle button.on{border-color:var(--acc);background:var(--acc);color:#fff}
+/* Issue #69: the sidebar goes light to match openbiodiversity.ca. Remap the panel's theme vars (so the
+   many inline color:var(--ink) emphasis spans stay visible on white) plus the few hard-coded dark control
+   colours. Map chrome — legend, how-panel, popups — keeps the dark theme. */
+#panel{--ink:#16202c;--mut:#5d6b7a;--panel:#fff;color:var(--ink);border-color:#dfe5ec;box-shadow:0 6px 22px rgba(20,40,70,.16)}
+#panel select{background:#f4f7fa;border-color:#d4dde6}
+#panel .infobox{background:#f4f7fa;border-color:#d4dde6}
+#panel details.adv{border-top-color:#e2e8ef}
+#panel .infobtn{border-color:#9aa7b5}
+/* Issue #69: single language toggle, lifted out of the panel to sit left of the How-scored button. */
+#topctrls{position:fixed;right:14px;top:calc(12px + var(--bh));z-index:1200;display:flex;align-items:stretch;gap:8px}
+#langbtn{background:#fff;color:#1b2a3a;border:0;border-radius:9px;box-shadow:0 2px 9px rgba(0,0,0,.28);padding:7px 13px;font-size:12.5px;font-weight:700;letter-spacing:.04em;cursor:pointer}
+#langbtn:hover{color:var(--acc)}
+#langbtn:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 .toggle{display:flex;align-items:center;gap:8px;margin:6px 0 2px;font-size:15px;cursor:pointer}
 .toggle input{width:16px;height:16px;accent-color:var(--gd)}
 #plan{width:100%;margin-top:10px;background:var(--gd);color:#04220f;border:0;border-radius:8px;padding:11px;font-size:17px;font-weight:700;cursor:pointer}
@@ -182,7 +194,6 @@ details.adv>summary:hover{color:var(--ink)}
   #viewtoggle{left:50%;top:auto;bottom:12px}
   #insights{left:0;top:0;height:100%;padding:54px 12px 24px}
   .infobtn{width:24px;height:24px;line-height:22px;font-size:13px}
-  .langtoggle button{padding:7px 13px}
 }
 #maplegend{position:fixed;bottom:24px;right:14px;z-index:1050;background:rgba(255,255,255,.93);border-radius:9px;padding:6px 10px;box-shadow:0 2px 10px rgba(0,0,0,.22);font-size:14px;color:#16233a;min-width:188px;max-width:244px;line-height:1.25}
 #maplegend .lt{font-weight:700;font-size:14px}/* retained: reused by the Getting Even categorical legend title (the priority-legend title div was removed for #47) */
@@ -193,7 +204,7 @@ details.adv>summary:hover{color:var(--ink)}
 @media(max-width:640px){#maplegend{left:auto;right:8px;bottom:auto;top:calc(50vh + 8px);min-width:0;max-width:158px;padding:6px 8px}}
 #loading{position:fixed;left:50%;top:46%;transform:translate(-50%,-50%);z-index:1200;background:rgba(255,255,255,.96);border-radius:10px;padding:11px 17px;box-shadow:0 3px 14px rgba(0,0,0,.25);font-size:14px;font-weight:600;color:#1b2a3a}
 @media(max-width:640px){#loading{left:50%;top:74vh}}
-#howbtn{position:fixed;right:14px;top:calc(12px + var(--bh));z-index:1200;display:flex;align-items:center;gap:6px;background:#fff;color:#1b2a3a;border:0;border-radius:9px;box-shadow:0 2px 9px rgba(0,0,0,.28);padding:7px 11px;font-size:12.5px;font-weight:650;cursor:pointer;max-width:260px}
+#howbtn{display:flex;align-items:center;gap:6px;background:#fff;color:#1b2a3a;border:0;border-radius:9px;box-shadow:0 2px 9px rgba(0,0,0,.28);padding:7px 11px;font-size:12.5px;font-weight:650;cursor:pointer;max-width:260px}
 #howbtn:hover{color:var(--acc)}
 #howbtn:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 #howbtn .ic{font-size:14px}
@@ -202,12 +213,14 @@ details.adv>summary:hover{color:var(--ink)}
 #howpanel .foot{margin-top:10px;font-size:11px;color:#7e91a6}
 #howclose{position:absolute;top:6px;right:8px;background:transparent;border:0;color:var(--mut);font-size:20px;line-height:1;cursor:pointer;padding:2px 6px}
 #howclose:hover{color:var(--ink)}
-@media(max-width:640px){#howbtn{max-width:none;right:8px;font-size:12px}#howpanel{left:8px;right:8px;width:auto;top:calc(50vh + 44px);max-height:44vh}}
+@media(max-width:640px){#topctrls{right:8px}#howbtn{max-width:none;font-size:12px}#howpanel{left:8px;right:8px;width:auto;top:calc(50vh + 44px);max-height:44vh}}
 </style></head>
 <body><div id="protobar" role="region" data-i18n-aria="aria_site_notice" aria-label="Site notice"><span data-i18n="proto_banner">⚠ Work in progress — a planning aid, not ground truth</span><button id="protox" type="button" data-i18n-aria="aria_dismiss" data-i18n-title="aria_dismiss_short" aria-label="Dismiss notice" title="Dismiss">×</button></div><div id="app">
 <div id="panel" role="main"><div id="panelInner">
-  <div class="langtoggle" role="group" data-i18n-aria="aria_language" aria-label="Language"><button id="lang-en" type="button">EN</button><button id="lang-fr" type="button">FR</button></div>
-  <h1 data-i18n-html="title_full">Where to <a href="https://blitzthegap.org" target="_blank" rel="noopener" style="color:var(--gd);text-decoration:underline">Blitz the Gap</a></h1>
+  <div class="titlerow">
+    <h1 data-i18n-html="title_full">Where to<br><a href="https://blitzthegap.org" target="_blank" rel="noopener" style="color:var(--acc);text-decoration:underline">Blitz the Gap</a></h1>
+    <img class="logo" src="blitz-logo.png" alt="" width="56" height="56">
+  </div>
   <div class="sechd"><span class="sec" data-i18n="sec_taxon">Species group</span></div>
   <select id="taxon" class="full" data-i18n-aria="aria_lifegroup" aria-label="Species group" style="margin-bottom:8px"></select>
   <div class="sechd"><span class="sec" data-i18n="sec_goal">Goal</span><span class="infobtn" data-i18n-title="info_btn" title="Where do these scores come from?" role="button" tabindex="0" data-i18n-aria="aria_about_data" aria-label="About the data" aria-expanded="false" onclick="const b=document.getElementById('taxinfo').classList.toggle('open');this.setAttribute('aria-expanded',b)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click();}">i</span></div>
@@ -297,7 +310,7 @@ details.adv>summary:hover{color:var(--ink)}
 <div id="viewtoggle" role="navigation" data-i18n-aria="aria_map_view" aria-label="Map view"><button id="vexplore" class="on" aria-pressed="true" data-i18n="view_explore">Explore</button><button id="vplan" aria-pressed="false" data-i18n="view_plan">Plan a trip</button><button id="vcompare" aria-pressed="false" data-i18n="view_compare">Compare goals</button></div>
 <div id="loading" role="status" aria-live="polite" data-i18n="loading">Loading the map…</div>
 <div id="maplegend" role="region" data-i18n-aria="aria_map_legend" aria-label="Map legend"><div class="ramp"></div><div class="lab"><span data-i18n="legend_low">well-sampled</span><span data-i18n="legend_high">biggest gaps</span></div><div class="hint" id="legendrel" style="display:none;color:#7a5b00" data-i18n="legend_rel">Colours rescaled to this view — not comparable across zoom levels.</div></div>
-<button id="howbtn" type="button" aria-expanded="false" aria-controls="howpanel" data-i18n-title="how_scored" title="How impact is scored & data sources"><span data-i18n="how_scored">How impact is scored & data sources</span></button>
+<div id="topctrls"><button id="langbtn" type="button" data-i18n-aria="aria_language" data-i18n-title="lang_switch" aria-label="Language" title="Switch language">EN</button><button id="howbtn" type="button" aria-expanded="false" aria-controls="howpanel" data-i18n-title="how_scored" title="How impact is scored & data sources"><span data-i18n="how_scored">How impact is scored & data sources</span></button></div>
 <div id="howpanel" role="region" data-i18n-aria="how_scored" aria-label="How impact is scored & data sources">
   <button id="howclose" type="button" data-i18n-aria="aria_close" data-i18n-title="aria_close" aria-label="Close" title="Close">×</button>
   <div class="legend" style="margin-top:2px"><span data-i18n="skip">skip</span><div class="bar"></div><span data-i18n="go_here">go here</span></div>
@@ -320,7 +333,7 @@ const COMPARE_ENABLED=false||/[?&]compare=1/.test(location.search);   // issue #
 // OBJ/PRESET/group names below are indexed to keep the data structures stable.
 const I18N={
   en:{
-    title_full:`Where to <a href="https://blitzthegap.org" target="_blank" rel="noopener" style="color:var(--gd);text-decoration:underline">Blitz the Gap</a>`,
+    title_full:`Where to<br><a href="https://blitzthegap.org" target="_blank" rel="noopener" style="color:var(--acc);text-decoration:underline">Blitz the Gap</a>`,
     sub:"Choose what counts as <b>impact</b>, then <b>explore</b> the priority map — or <b>plan a trip</b> to the best spot you can reach and get back from.",
     sec_group:"Life group & goal", sec_taxon:"Species group", sec_goal:"Goal",
     info_btn:"Where do these scores come from?",
@@ -338,7 +351,7 @@ const I18N={
     my_location:"Locate me",
     start_alt:"Trip start — drag to move", start_tip:"Start — drag me, or tap the map",
     aria_site_notice:"Site notice", aria_dismiss:"Dismiss notice", aria_dismiss_short:"Dismiss",
-    aria_language:"Language", aria_about_data:"About the data", aria_lifegroup:"Species group", aria_criteria:"Criteria",
+    aria_language:"Language", lang_switch:"Switch language", aria_about_data:"About the data", aria_lifegroup:"Species group", aria_criteria:"Criteria",
     aria_search:"Search for a start place", aria_search_results:"Search results", aria_time_unit:"Time unit",
     aria_time_budget:"Time budget", aria_max_travel:"Max travel each way", aria_worth_drive:"Worth the drive",
     aria_map_style:"Map style", aria_map_brightness:"Map brightness", aria_data_opacity:"Density opacity", aria_top_cells:"Top cells (accessible list)",
@@ -374,12 +387,12 @@ const I18N={
     gt_switch:(g)=>`Switch the map to ${g}`,
     map_style:"Map style",
     style_standard:"Standard", style_satellite:"Satellite", style_terrain:"Terrain", style_inat_density:"iNaturalist sampling density",
-    crit_ge:"Getting Even — which group to record",
+    crit_ge:"Getting Even (under-represented groups)",
     roads:"Roads", labels_places:"Labels & places",
     vector_hint:"Vector basemap — toggle layers like Maputnik. Other styles are raster (roads baked in).",
     inat_coverage:"iNaturalist coverage",
     coverage_hint:`Where data already is (bright = well-sampled, dark = gaps) — an iNaturalist-density "light up the map" layer (Biodiversité Québec), for the current group.`,
-    getting_even:"Getting Even — which group to record",
+    getting_even:"Getting Even (under-represented groups)",
     ge_hint:`Each cell is coloured by the most under-represented taxonomic group there (birds excluded — already well covered by eBird) — our finer-resolution take on the official "Getting Even" challenge. From iNaturalist observation density: a sample, not a census.`,
     ge_info_btn:"How is the recommended group worked out?",
     ge_method:`<b>How "which group to record" is worked out.</b> Tap any cell and the app asks iNaturalist, live, for each group of life (birds excluded — eBird already covers them):
@@ -471,7 +484,7 @@ const I18N={
     modes:{Walk:"Walk",Cycle:"Cycle",Drive:"Drive"},
   },
   fr:{
-    title_full:`Où aller pour <a href="https://blitzthegap.org" target="_blank" rel="noopener" style="color:var(--gd);text-decoration:underline">Blitz the Gap</a>`,
+    title_full:`Où aller pour<br><a href="https://blitzthegap.org" target="_blank" rel="noopener" style="color:var(--acc);text-decoration:underline">Blitz the Gap</a>`,
     sub:"Choisissez ce qui compte comme <b>impact</b>, puis <b>explorez</b> la carte des priorités — ou <b>planifiez une sortie</b> vers le meilleur endroit que vous pouvez atteindre et d'où vous pouvez revenir.",
     sec_group:"Groupe d'espèces et objectif", sec_taxon:"Groupe d'espèces", sec_goal:"Objectif",
     info_btn:"D'où viennent ces scores?",
@@ -489,7 +502,7 @@ const I18N={
     my_location:"Me localiser",
     start_alt:"Départ de la sortie — glissez pour déplacer", start_tip:"Départ — glissez-moi, ou touchez la carte",
     aria_site_notice:"Avis du site", aria_dismiss:"Fermer l'avis", aria_dismiss_short:"Fermer",
-    aria_language:"Langue", aria_about_data:"À propos des données", aria_lifegroup:"Groupe d'espèces", aria_criteria:"Critère",
+    aria_language:"Langue", lang_switch:"Changer de langue", aria_about_data:"À propos des données", aria_lifegroup:"Groupe d'espèces", aria_criteria:"Critère",
     aria_search:"Rechercher un lieu de départ", aria_search_results:"Résultats de recherche", aria_time_unit:"Unité de temps",
     aria_time_budget:"Temps disponible", aria_max_travel:"Trajet max (aller)", aria_worth_drive:"Vaut le déplacement",
     aria_map_style:"Style de carte", aria_map_brightness:"Luminosité de la carte", aria_data_opacity:"Opacité des données", aria_top_cells:"Meilleures cellules (liste accessible)",
@@ -525,12 +538,12 @@ const I18N={
     gt_switch:(g)=>`Afficher ${g} sur la carte`,
     map_style:"Style de carte",
     style_standard:"Standard", style_satellite:"Satellite", style_terrain:"Relief", style_inat_density:"Densité d'échantillonnage iNaturalist",
-    crit_ge:"Combler l'écart — quel groupe noter",
+    crit_ge:"Combler l'écart (groupes sous-représentés)",
     roads:"Routes", labels_places:"Étiquettes et lieux",
     vector_hint:"Fond vectoriel — activez les couches comme dans Maputnik. Les autres styles sont matriciels (routes intégrées).",
     inat_coverage:"Couverture iNaturalist",
     coverage_hint:`Où les données existent déjà (clair = bien échantillonné, foncé = lacunes) — une couche de densité iNaturalist « illuminer la carte » (Biodiversité Québec), pour le groupe actuel.`,
-    getting_even:"Combler l'écart — quel groupe noter",
+    getting_even:"Combler l'écart (groupes sous-représentés)",
     ge_hint:`Chaque cellule est colorée selon le groupe taxonomique le plus sous-représenté (oiseaux exclus — déjà bien couverts par eBird) — notre version à plus fine résolution du défi officiel « Combler l'écart ». Selon la densité d'observations iNaturalist : un échantillon, pas un inventaire.`,
     ge_info_btn:"Comment le groupe recommandé est-il déterminé ?",
     ge_method:`<b>Comment « quel groupe noter » est déterminé.</b> Touchez une cellule et l'application interroge iNaturalist, en direct, pour chaque groupe du vivant (oiseaux exclus — déjà couverts par eBird) :
@@ -641,8 +654,7 @@ function applyI18N(){
   document.querySelectorAll('[data-i18n-ph]').forEach(el=>{const v=t(el.getAttribute('data-i18n-ph'));if(v!=null)el.placeholder=v;});
   document.querySelectorAll('[data-i18n-title]').forEach(el=>{const v=t(el.getAttribute('data-i18n-title'));if(v!=null)el.title=v;});
   document.querySelectorAll('[data-i18n-aria]').forEach(el=>{const v=t(el.getAttribute('data-i18n-aria'));if(v!=null)el.setAttribute('aria-label',v);});
-  const le=document.getElementById('lang-en'),lf=document.getElementById('lang-fr');
-  if(le)le.classList.toggle('on',LANG==='en');if(lf)lf.classList.toggle('on',LANG==='fr');
+  const lb=document.getElementById('langbtn');if(lb)lb.textContent=LANG.toUpperCase();   // #69: single toggle shows the active language
 }
 function relabelDynamic(){
   // re-render the JS-built widgets whose static strings come from the dict
@@ -1461,8 +1473,7 @@ if(!PLAN_ENABLED&&!COMPARE_ENABLED){const vt=document.getElementById('viewtoggle
 function showLoading(on){const el=document.getElementById('loading');if(el)el.style.display=on?'block':'none';}
 
 // language toggle: seed from navigator.language / localStorage (done above), wire buttons, apply chrome
-document.getElementById('lang-en').onclick=()=>setLang('en');
-document.getElementById('lang-fr').onclick=()=>setLang('fr');
+document.getElementById('langbtn').onclick=()=>setLang(LANG==='en'?'fr':'en');   // #69: one button toggles EN/FR
 applyI18N();   // paint static chrome + set <html lang> for the seeded language
 
 function bootSeq(){return loadGroup(state.taxon).then(()=>{buildMarkers();setView('explore');showLoading(false);
