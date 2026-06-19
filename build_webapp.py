@@ -316,22 +316,21 @@ details.adv>summary:hover{color:var(--ink)}
   <div id="prospects" data-idle="1"></div>
   </div>
 
-  <details class="adv"><summary data-i18n="map_style">Map style</summary>
-    <select id="basemap" class="full" data-i18n-aria="aria_map_style" aria-label="Map style" style="margin-top:4px"></select>
-    <div id="layertoggles" style="display:none;margin-top:8px">
-      <label class="toggle" style="margin:4px 0"><input type="checkbox" id="tgRoads" checked> <span data-i18n="roads">Roads</span></label>
-      <label class="toggle" style="margin:4px 0"><input type="checkbox" id="tgLabels" checked> <span data-i18n="labels_places">Labels &amp; places</span></label>
-      <div style="color:var(--mut);font-size:11px;line-height:1.4" data-i18n="vector_hint">Vector basemap — toggle layers like Maputnik. Other styles are raster (roads baked in).</div>
-    </div>
-    <label class="toggle" style="display:none"><input type="checkbox" id="tgCoverage"> <span data-i18n="inat_coverage">iNaturalist coverage</span></label><!-- driven by the "iNaturalist sampling density" map style (#20) -->
-    <label class="toggle" style="display:none"><input type="checkbox" id="tgGettingEven"> <span data-i18n="getting_even">Getting Even — which group to record</span></label><!-- driven by the "Getting Even" criterion (#20) -->
-    <div style="display:none" data-i18n="ge_hint">Each cell is coloured by the most under-represented taxonomic group there (birds excluded — already well covered by eBird) — our finer-resolution take on the official "Getting Even" challenge. From iNaturalist observation density: a sample, not a census.</div>
-    <div class="infobox" id="geinfo" data-i18n-html="ge_method"></div>
-    <div id="opacityRow" style="display:none"><!-- #46: only shown while a data overlay (density style) is active; basemap brightness is otherwise locked at 100% -->
-    <div style="display:flex;justify-content:space-between;margin:9px 0 0"><span id="bople" style="font-size:12.5px" data-i18n="data_opacity">Density opacity</span><span class="v" id="bopv" style="color:var(--acc)">80%</span></div>
-    <input type="range" id="baseop" min="0.1" max="1" step="0.05" value="1" data-i18n-aria="aria_data_opacity" aria-label="Density opacity">
-    </div>
-  </details>
+  <div class="sechd"><span class="sec" data-i18n="map_style">Map style</span></div>
+  <select id="basemap" class="full" data-i18n-aria="aria_map_style" aria-label="Map style" style="margin-bottom:8px"></select>
+  <div id="layertoggles" style="display:none;margin-top:8px">
+    <label class="toggle" style="margin:4px 0"><input type="checkbox" id="tgRoads" checked> <span data-i18n="roads">Roads</span></label>
+    <label class="toggle" style="margin:4px 0"><input type="checkbox" id="tgLabels" checked> <span data-i18n="labels_places">Labels &amp; places</span></label>
+    <div style="color:var(--mut);font-size:11px;line-height:1.4" data-i18n="vector_hint">Vector basemap — toggle layers like Maputnik. Other styles are raster (roads baked in).</div>
+  </div>
+  <label class="toggle" style="display:none"><input type="checkbox" id="tgCoverage"> <span data-i18n="inat_coverage">iNaturalist coverage</span></label><!-- driven by the "iNaturalist sampling density" map style (#20) -->
+  <label class="toggle" style="display:none"><input type="checkbox" id="tgGettingEven"> <span data-i18n="getting_even">Getting Even — which group to record</span></label><!-- driven by the "Getting Even" criterion (#20) -->
+  <div style="display:none" data-i18n="ge_hint">Each cell is coloured by the most under-represented taxonomic group there (birds excluded — already well covered by eBird) — our finer-resolution take on the official "Getting Even" challenge. From iNaturalist observation density: a sample, not a census.</div>
+  <div class="infobox" id="geinfo" data-i18n-html="ge_method"></div>
+  <div id="opacityRow" style="display:none"><!-- #46: only shown while a data overlay (density style) is active; basemap brightness is otherwise locked at 100% -->
+  <div style="display:flex;justify-content:space-between;margin:9px 0 0"><span id="bople" style="font-size:12.5px" data-i18n="data_opacity">Density opacity</span><span class="v" id="bopv" style="color:var(--acc)">80%</span></div>
+  <input type="range" id="baseop" min="0.1" max="1" step="0.05" value="1" data-i18n-aria="aria_data_opacity" aria-label="Density opacity">
+  </div>
 
   <div id="celltable" class="sronly" role="region" data-i18n-aria="aria_top_cells" aria-label="Top cells (accessible list)"></div>
 </div></div>
