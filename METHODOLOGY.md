@@ -100,9 +100,11 @@ the whole thing is re-run **out-of-sample on Eastern Canada** (disjoint from BC)
 - **Under-sampling predicts discovery.** At equal effort, the train-only `discover` axis ranks
   cells by new-species yield at Spearman **ρ ≈ 0.47–0.69** across five taxa (amphibians, birds,
   insects, mammals, reptiles), all permutation **p < 0.01**, and holds out-of-sample in the East.
-- **Going where it's already busy anti-predicts it.** All-time observation density (the
-  opportunistic "light up the map" signal, used as a negative control) lands at **ρ ≈ −0.47 to
-  −0.69** — the opposite sign. This is the core "blitz the gap" result.
+- **Chasing the crowds is the same finding, read backwards.** The `discover` axis is by construction
+  an inverse of observation density, so all-time density (the opportunistic "light up the map" signal,
+  used as a negative control) lands at the *exact mirror* value, **ρ ≈ −0.47 to −0.69**. It is not a
+  second, independent test — it is the one result stated the other way: steering toward busy cells is
+  precisely the wrong move. That sign flip is the "blitz the gap" result.
 - **The leak-free composite validates** at **ρ ≈ 0.21–0.52** (all p ≤ 0.03): the blended impact
   score points the same way, once its `discover` axis is rebuilt from only what was known at T.
 - **Read it per-effort, not by raw count.** Because more people visit busy cells, those cells
@@ -112,23 +114,33 @@ the whole thing is re-run **out-of-sample on Eastern Canada** (disjoint from BC)
 
 ### The numbers, per taxon
 
-| Taxon | Region | Cells (rarefied) | `discover` ρ | Composite ρ | Yield, top vs bottom |
-|---|---|---:|---:|---:|---:|
-| Amphibians | BC | 91 | 0.48 | 0.42 | 2.0× |
-| Birds | BC | 126 | 0.61 | 0.24 | 1.8× |
-| Insects | BC | 106 | 0.53 | 0.21 | 1.3× |
-| Mammals | BC | 141 | 0.61 | 0.30 | 2.7× |
-| Reptiles | BC | 59 | 0.65 | 0.52 | 2.5× |
-| Birds | East | 178 | 0.58 | 0.37 | 1.4× |
-| Insects | East | 136 | 0.47 | 0.30 | 1.1× |
-| Mammals | East | 213 | 0.69 | 0.52 | 3.0× |
+| Taxon | Region | Cells (rarefied) | `discover` ρ | Composite ρ | Shipped ρ | Yield, top vs bottom |
+|---|---|---:|---:|---:|---:|---:|
+| Amphibians | BC | 91 | 0.48 | 0.42 | 0.09 n.s. | 2.0× |
+| Birds | BC | 126 | 0.61 | 0.24 | 0.10 n.s. | 1.8× |
+| Insects | BC | 106 | 0.53 | 0.21 | 0.02 n.s. | 1.3× |
+| Mammals | BC | 141 | 0.61 | 0.30 | 0.26 | 2.7× |
+| Reptiles | BC | 59 | 0.65 | 0.52 | 0.27 | 2.5× |
+| Birds | East | 178 | 0.58 | 0.37 | 0.09 n.s. | 1.4× |
+| Insects | East | 136 | 0.47 | 0.30 | −0.11 n.s. | 1.1× |
+| Mammals | East | 213 | 0.69 | 0.52 | 0.28 | 3.0× |
 
 *How to read a row:* take **mammals in the East** — rank its 213 cells by the `discover` axis, send the
 same five observations to each, and the top-ranked cells turn up **3× as many new species** as the
 bottom-ranked ones. **ρ** is the rank correlation between priority and discovery (1.0 = perfect, 0 =
 none); **Yield** is that effect in plain terms — new species found per equal effort, best cells over
 worst. Every `discover` correlation clears permutation **p < 0.001**; the composite clears **p ≤ 0.03**
-(weakest: BC insects, 0.029).
+(weakest: BC insects, 0.029). `n.s.` = not statistically significant (p > 0.05).
+
+**What the live map shows today is weaker than what validates.** The `Shipped ρ` column scores the
+all-time-density blend the map currently ranks by. It validates for **mammals** (ρ 0.26–0.28, p ≤ 0.002)
+and marginally for BC reptiles, but for **birds, insects, and amphibians it is statistically
+indistinguishable from random** (p > 0.2). The reason is mechanical: the shipped `discover` axis is
+`1/(all-time density)`, so a just-sampled cell instantly looks "covered" and sheds priority — defensible
+prospectively, but it means the *shown* score is not the one the backtest validates. The strong columns
+above (`discover`, composite) rebuild that axis from only what was known before the cutoff T. Closing the
+gap — anchoring the shipped axis to a fixed snapshot or window — is tracked in
+[issue #80](https://github.com/PollockLab/where-to-blitz/issues/80).
 
 *Reproduce:* `python backtest_appscore.py` (BC) and `python backtest_east.py` (East) regenerate
 `cluster_results/voi_appscore_results.json` and `…_east_results.json`; the table reads straight from
