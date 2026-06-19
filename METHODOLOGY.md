@@ -130,7 +130,11 @@ same five observations to each, and the top-ranked cells turn up **3× as many n
 bottom-ranked ones. **ρ** is the rank correlation between priority and discovery (1.0 = perfect, 0 =
 none); **Yield** is that effect in plain terms — new species found per equal effort, best cells over
 worst. Every `discover` correlation clears permutation **p < 0.001**; the composite clears **p ≤ 0.03**
-(weakest: BC insects, 0.029). `n.s.` = not statistically significant (p > 0.05).
+(weakest: BC insects, 0.029). `n.s.` = not statistically significant (p > 0.05). The `discover`,
+`Shipped`, and `Yield` columns are single-axis and preset-independent; the `Composite` column scores the
+backtest's blend (`discover` 0.8 + `env` 0.7 + `urgency` 0.3), close to but not identical to the live
+*Spatial Gap* default (`discover` 1.0 + `env` 0.5) — refreshing it to the current preset is part of
+[issue #80](https://github.com/PollockLab/where-to-blitz/issues/80).
 
 **What the live map shows today is weaker than what validates.** The `Shipped ρ` column scores the
 all-time-density blend the map currently ranks by. It validates for **mammals** (ρ 0.26–0.28, p ≤ 0.002)
