@@ -313,6 +313,7 @@ details.adv>summary:hover{color:var(--ink)}
 <script>
 const FILES={"All biodiversity":"webapp_data_All_biodiversity.json","Plantae":"webapp_data_Plantae.json","Insecta":"webapp_data_Insecta.json","Aves":"webapp_data_Aves.json","Fungi":"webapp_data_Fungi.json","Mammalia":"webapp_data_Mammalia.json","Actinopterygii":"webapp_data_Actinopterygii.json","Reptilia":"webapp_data_Reptilia.json","Amphibia":"webapp_data_Amphibia.json","Arachnida":"webapp_data_Arachnida.json","Mollusca":"webapp_data_Mollusca.json"}, OBJ=[{"key": "discover", "name": "Discover the most species", "q": "go where few people have looked"}, {"key": "conservation", "name": "Find rare species", "q": "go where COSEWIC/SARA species at risk concentrate"}, {"key": "env", "name": "Cover every habitat", "q": "go where the climate is under-sampled"}, {"key": "staleness", "name": "Freshest gaps", "q": "go where lots was recorded long ago but little lately (iNaturalist recent vs all-time density)"}, {"key": "urgency", "name": "Sample before it's lost", "q": "go where forest cover was recently lost (logging, fire, dieback)"}], PRESETS=[{"name": "Spatial Gap", "w": [1.0, 0, 0.5, 0, 0], "proj": "blitz-the-gap-2026-general", "blurb": "Under-recorded places and under-sampled climates (iNaturalist density + CHELSA climate gap)."}, {"name": "Species discovery", "w": [1.0, 0, 0, 0.6, 0], "proj": "blitz-the-gap-revisiting-the-past", "blurb": "Where new-to-the-record species are likeliest: under-sampling plus cells recorded long ago but quiet lately."}, {"name": "Conservation", "w": [0, 1.0, 0, 0, 0.4], "proj": "blitz-the-gap-canada-s-most-wanted", "blurb": "Where species at risk concentrate, weighted toward recently changed habitat (COSEWIC/SARA via CAN-SAR + GBIF)."}], DEFAULT=[1.0, 0, 0.5, 0, 0];
 const PLAN_ENABLED=false||/[?&]plan=1/.test(location.search);   // issue #17: hidden by default; ?plan=1 is a no-clutter escape hatch for the team (no rebuild)
+const COMPARE_ENABLED=false||/[?&]compare=1/.test(location.search);   // issue #71: stashed; ?compare=1 re-enables
 
 // ---- i18n (EN / Canadian French) ----------------------------------------
 // Static UI chrome is keyed by string id and applied to [data-i18n*] nodes.
@@ -1455,6 +1456,8 @@ document.getElementById('vexplore').onclick=()=>setView('explore');
 document.getElementById('vplan').onclick=()=>setView('plan');
 document.getElementById('vcompare').onclick=()=>setView('compare');
 if(!PLAN_ENABLED){const vp=document.getElementById('vplan');if(vp)vp.style.display='none';const tu=document.getElementById('tripui');if(tu)tu.style.display='none';}   // issue #17
+if(!COMPARE_ENABLED){const vc=document.getElementById('vcompare');if(vc)vc.style.display='none';}   // issue #71
+if(!PLAN_ENABLED&&!COMPARE_ENABLED){const vt=document.getElementById('viewtoggle');if(vt)vt.style.display='none';}   // only Explore remains — the toggle is redundant
 
 function showLoading(on){const el=document.getElementById('loading');if(el)el.style.display=on?'block':'none';}
 

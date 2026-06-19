@@ -38,6 +38,7 @@ DEFAULT = PRESETS[0]["w"]
 # the team wants a simple gap-visualisation tool, not a trip planner. The code stays in place and
 # dormant (flag flips it back) so a future "help plan a blitz" tool can reuse it.
 PLAN_ENABLED = False
+COMPARE_ENABLED = False   # Issue #71: the "Compare goals" view is stashed (kept dormant). Flag flips it back.
 
 HTML = r"""<!doctype html>
 <html lang="en"><head>
@@ -354,6 +355,7 @@ details.adv>summary:hover{color:var(--ink)}
 <script>
 const FILES=__FILES__, OBJ=__OBJ__, PRESETS=__PRESETS__, DEFAULT=__DEFAULT__;
 const PLAN_ENABLED=__PLAN_ENABLED__||/[?&]plan=1/.test(location.search);   // issue #17: hidden by default; ?plan=1 is a no-clutter escape hatch for the team (no rebuild)
+const COMPARE_ENABLED=__COMPARE_ENABLED__||/[?&]compare=1/.test(location.search);   // issue #71: stashed; ?compare=1 re-enables
 
 // ---- i18n (EN / Canadian French) ----------------------------------------
 // Static UI chrome is keyed by string id and applied to [data-i18n*] nodes.
@@ -1496,6 +1498,8 @@ document.getElementById('vexplore').onclick=()=>setView('explore');
 document.getElementById('vplan').onclick=()=>setView('plan');
 document.getElementById('vcompare').onclick=()=>setView('compare');
 if(!PLAN_ENABLED){const vp=document.getElementById('vplan');if(vp)vp.style.display='none';const tu=document.getElementById('tripui');if(tu)tu.style.display='none';}   // issue #17
+if(!COMPARE_ENABLED){const vc=document.getElementById('vcompare');if(vc)vc.style.display='none';}   // issue #71
+if(!PLAN_ENABLED&&!COMPARE_ENABLED){const vt=document.getElementById('viewtoggle');if(vt)vt.style.display='none';}   // only Explore remains — the toggle is redundant
 
 function showLoading(on){const el=document.getElementById('loading');if(el)el.style.display=on?'block':'none';}
 
@@ -1518,6 +1522,7 @@ out = (HTML.replace("__FILES__", json.dumps(FILES, separators=(",", ":")))
            .replace("__OBJ__", json.dumps(OBJ))
            .replace("__PRESETS__", json.dumps(PRESETS))
            .replace("__DEFAULT__", json.dumps(DEFAULT))
-           .replace("__PLAN_ENABLED__", "true" if PLAN_ENABLED else "false"))
+           .replace("__PLAN_ENABLED__", "true" if PLAN_ENABLED else "false")
+           .replace("__COMPARE_ENABLED__", "true" if COMPARE_ENABLED else "false"))
 open("index.html", "w").write(out)
 print("wrote index.html  ({:.0f} KB)".format(len(out) / 1024))
