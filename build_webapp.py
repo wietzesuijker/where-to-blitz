@@ -1,5 +1,5 @@
 """Builds index.html — an interactive trip planner for the Blitz the Gap
-"where should I go to record biodiversity?" map. Leaflet basemap (OpenStreetMap +
+"where should I go to record biodiversity?" map. MapLibre GL basemap (OpenStreetMap +
 style switcher); a weight slider per goal blended into a live "impact" score; a
 start point + flexible time budget (minutes / hours / days); real driving routes
 (OSRM) with drive time, field time, and travel CO2; and a low-carbon ranking
@@ -57,16 +57,10 @@ HTML = r"""<!doctype html>
 <meta name="twitter:title" content="Where to Blitz the Gap">
 <meta name="twitter:description" content="Find Canada's biodiversity gaps and plan a trip to the best spot you can reach.">
 <meta name="twitter:image" content="https://pollocklab.github.io/where-to-blitz/og-image.png">
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-  integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="anonymous"/>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-  integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="anonymous"></script>
 <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css"
   integrity="sha384-MinO0mNliZ3vwppuPOUnGa+iq619pfMhLVUXfC4LHwSCvF9H+6P/KO4Q7qBOYV5V" crossorigin="anonymous"/>
 <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"
   integrity="sha384-SYKAG6cglRMN0RVvhNeBY0r3FYKNOJtznwA0v7B5Vp9tr31xAHsZC0DqkQ/pZDmj" crossorigin="anonymous"></script>
-<script src="https://unpkg.com/@maplibre/maplibre-gl-leaflet@0.0.22/leaflet-maplibre-gl.js"
-  integrity="sha384-4CB9Vtol9LN6lGgBCvmPLbUEZwilrqIvPieSRurgAXAB7FVJaLS9n8WyAIA5wjQ+" crossorigin="anonymous"></script>
 <script src="https://unpkg.com/pmtiles@3.2.1/dist/pmtiles.js"
   integrity="sha384-QfbOCebHNw8pQiPAOd2IFee2v2A5VYZxBk0+JGZ5H+3mfzVIp6zsQNkTsfGJot93" crossorigin="anonymous"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
@@ -182,7 +176,7 @@ details.adv>summary::-webkit-details-marker{display:none}
 details.adv>summary::before{content:"▸";font-size:11.5px;display:inline-block;transition:transform .15s}
 details.adv[open]>summary::before{transform:rotate(90deg)}
 details.adv>summary:hover{color:var(--ink)}
-.leaflet-popup-content{font-size:15px}.leaflet-popup-content b{color:#0a2a44}
+.maplibregl-popup-content{font-size:15px;padding:12px 16px 14px;border-radius:8px;box-shadow:0 2px 10px rgba(0,0,0,.25)}.maplibregl-popup-content b{color:#0a2a44}.maplibregl-popup-close-button{font-size:18px;padding:0 5px;color:#667}
 /* Issue #44: per-cell coverage + rare species live in the popup. Headings, a scroll-capped group list, and a 4-up species grid (no horizontal scroll). */
 .popsec{font-size:12.5px;font-weight:700;color:#0a2a44;margin:9px 0 5px}
 .popsec:first-child{margin-top:1px}
@@ -711,7 +705,7 @@ function relabelDynamic(){
   // re-render Getting Even categorical legend in the new language (no-op when inactive)
   if(typeof updateLegend==='function'&&typeof geActive==='function'&&geActive())updateLegend();
   // start marker's tooltip/title/alt (created once at init) follow the language
-  if(typeof startMarker!=='undefined'&&startMarker){startMarker.setTooltipContent(t('start_tip'));const se=startMarker.getElement();if(se){se.setAttribute('title',t('start_tip'));se.setAttribute('alt',t('start_alt'));}}
+  if(typeof startMarker!=='undefined'&&startMarker){const se=startMarker.getElement();if(se){se.setAttribute('title',t('start_tip'));se.setAttribute('aria-label',t('start_alt'));}}
   // start-place prospects idle text (only if untouched)
   const pr=document.getElementById('prospects');
   // Re-render whatever cell view is open in the new language. iNat responses are URL-cached and gap-tree
@@ -763,7 +757,7 @@ function caOnlyActive(){const e=document.getElementById('tgCanadaOnly');return e
 // US-side cells (approx, lazy-loaded): hidden when "Canada only" is on -- the cross-border band is a data edge, not a real gap (#5).
 let US_CELLS=null;
 async function loadUS(){if(US_CELLS)return;try{const r=await fetchT(DATA_DIR+'us_cells.json',8000);US_CELLS=new Set((await r.json()).us_cells||[]);}catch(e){US_CELLS=new Set();}}
-function applyCanadaMask(){if(!caOnlyActive())return;if(!US_CELLS){loadUS().then(recolour);return;}markers.forEach(m=>{if(US_CELLS.has(gekey(m.r[0],m.r[1])))m.mk.setStyle({opacity:0,fillOpacity:0});});}
+function applyCanadaMask(){if(!caOnlyActive())return;if(!US_CELLS){loadUS().then(recolour);return;}markers.forEach(m=>{if(US_CELLS.has(gekey(m.r[0],m.r[1])))setCellState(m.i,'rgba(0,0,0,0)',0);});}
 function geColour(m){const v=GE[gekey(m.r[0],m.r[1])];if(!v)return GE_ALL;return v[0]<0?GE_ALL:(GE_PAL[v[0]]||GE_ALL);}
 // A cell in the bottom band of the national gap ranking (e.g. well-sampled cities) is a low
 // priority for the all-taxa mission -- but it's not worthless. Surface the two honest reasons
@@ -925,49 +919,66 @@ function colour(t){t=Math.max(0,Math.min(1,t));const x=t*(RAMP.length-1),i=Math.
 function fmth(h){if(h>=24){const d=Math.floor(h/24),hr=Math.round(h%24);return d+'d'+(hr?(' '+hr+'h'):'');}const m=Math.round(h*60);return m>=60?Math.floor(m/60)+'h'+String(m%60).padStart(2,'0'):m+' min';}
 function haversine(a,b,c,d){const R=6371,r=Math.PI/180,x=(c-a)*r,y=(d-b)*r,h=Math.sin(x/2)**2+Math.cos(a*r)*Math.cos(c*r)*Math.sin(y/2)**2;return 2*R*Math.asin(Math.sqrt(h));}
 
-const map=L.map('map',{zoomControl:true,preferCanvas:true}).setView([58,-96],4);
-map.zoomControl.setPosition('bottomleft');   // issue #54: top-left default sits under the floating panel; bottom-left is clear in Explore
-let _ppf=null;map.on('popupopen',()=>{_ppf=document.activeElement;});map.on('popupclose',()=>{try{if(_ppf&&_ppf.focus)_ppf.focus();}catch(e){}_ppf=null;
-  if(!_reselect&&state.view==='explore'&&(destMarker||destCell))clearSelection();});   // closing the cell popup deselects (issue #16)
+const ATTR='&copy; OpenStreetMap contributors · routing &copy; OSRM';
+// MapLibre zoom = Leaflet zoom - 1 (256-px raster tiles): the old Leaflet zoom 4 maps to 3 here.
+const map=new maplibregl.Map({container:'map',style:{version:8,sources:{},layers:[]},center:[-96,58],zoom:3,minZoom:1,maxZoom:18,attributionControl:false});
+map.addControl(new maplibregl.AttributionControl({compact:true,customAttribution:ATTR}),'bottom-right');
+map.addControl(new maplibregl.NavigationControl({showCompass:false}),'bottom-left');   // issue #54: clear of the floating panel
+map.dragRotate.disable();map.touchZoomRotate.disableRotation();   // a 2-D priority map has no use for bearing/pitch
+const CELL_LAYER='cells-fill';
+// Layer stack bottom->top: basemap -> density (cov) -> cells-fill -> route lines; DOM markers sit above the canvas.
+let _mapLoaded=false; const _onMap=[];
+function whenMap(fn){_mapLoaded?fn():_onMap.push(fn);}
+function firstNonBase(){const ls=map.getStyle().layers||[];const l=ls.find(x=>x.id!=='basemap');return l?l.id:undefined;}
+map.on('load',()=>{
+  _mapLoaded=true;
+  map.addSource('cells',{type:'geojson',data:{type:'FeatureCollection',features:[]}});
+  // Per-cell colour/opacity ride on feature-state, so a taxon switch or recolour never reparses the 38k-cell
+  // source -- it just restyles. fill-outline matches the fill so adjacent cells tile seamlessly (the old
+  // canvas stroke-matches-fill trick, now native). #1/#44 colour logic stays in JS (colour()/geColour()).
+  map.addLayer({id:CELL_LAYER,type:'fill',source:'cells',paint:{
+    'fill-color':['coalesce',['feature-state','fc'],'rgba(0,0,0,0)'],
+    'fill-opacity':['coalesce',['feature-state','op'],0],
+    'fill-outline-color':['coalesce',['feature-state','fc'],'rgba(0,0,0,0)']}});
+  map.on('click',CELL_LAYER,e=>{const f=e.features&&e.features[0];if(!f)return;const r=markers[f.id]&&markers[f.id].r;if(!r)return;
+    if(caOnlyActive()&&US_CELLS&&US_CELLS.has(gekey(r[0],r[1])))return;state.view==='explore'?exploreCell(r[0],r[1]):planTap(r[0],r[1]);});
+  map.on('mouseenter',CELL_LAYER,()=>{map.getCanvas().style.cursor='pointer';});
+  map.on('mouseleave',CELL_LAYER,()=>{map.getCanvas().style.cursor='';});
+  setBase('Standard');
+  _onMap.forEach(fn=>{try{fn();}catch(e){}});_onMap.length=0;
+});
+// Esc / map-click popup close -> deselect (issue #16). MapLibre has no global popup events, so each popup we
+// open is wired to onPopupOpen/onPopupClose and tracked in curPopup; map clicks auto-close (closeOnClick).
+let _ppf=null,curPopup=null;
+function onPopupOpen(){_ppf=document.activeElement;}
+function onPopupClose(){try{if(_ppf&&_ppf.focus)_ppf.focus();}catch(e){}_ppf=null;curPopup=null;
+  if(!_reselect&&state.view==='explore'&&(destMarker||destCell))clearSelection();}
+function wirePopup(p){p.on('open',onPopupOpen);p.on('close',onPopupClose);curPopup=p;return p;}
+function closePopup(){if(curPopup)curPopup.remove();}   // remove() fires 'close' -> onPopupClose
+function setCellState(i,fc,op){if(_mapLoaded&&map.getSource('cells'))map.setFeatureState({source:'cells',id:i},{fc:fc,op:op});}
+function lngLatBounds(latlngs){const b=new maplibregl.LngLatBounds();latlngs.forEach(p=>b.extend([p[1],p[0]]));return b;}
 document.addEventListener('keydown',e=>{if(e.key!=='Escape')return;
   const hp=document.getElementById('howpanel');if(hp&&hp.classList.contains('open'))return;   // Esc closes the info panel first (handled below)
-  if(state.view==='explore'&&(destMarker||destCell)){map.closePopup();clearSelection();}});
-const ATTR='&copy; OpenStreetMap contributors · routing &copy; OSRM';
+  if(state.view==='explore'&&(destMarker||destCell)){closePopup();clearSelection();}});
+// Raster basemaps. Leaflet {s}/{r} templating isn't supported, so subdomains expand into a tiles[] array
+// (round-robined) and {r} retina is dropped. The dead vector-basemap branch (#layertoggles, never wired to a
+// real style) is gone with the maplibre-gl-leaflet shim.
+const SUB=(u,s)=>s?s.split('').map(c=>u.replace('{s}',c)):[u];
 const BASEMAPS={
-  "Standard":{url:'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',opt:{subdomains:'abcd',maxZoom:20}},
-  "Satellite":{url:'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',opt:{maxZoom:19}},
-  "Terrain":{url:'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',opt:{subdomains:'abc',maxZoom:17}},
-  "Light":{url:'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',opt:{subdomains:'abcd',maxZoom:20}}   // base under the iNaturalist-density style; not a dropdown choice
+  "Standard":{tiles:SUB('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png','abcd'),maxzoom:20},
+  "Satellite":{tiles:SUB('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'),maxzoom:19},
+  "Terrain":{tiles:SUB('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png','abc'),maxzoom:17},
+  "Light":{tiles:SUB('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png','abcd'),maxzoom:20}   // base under the iNaturalist-density style; not a dropdown choice
 };
-let baseLayer=null, baseOpacity=1, glBase=null, covOpacity=0.8;   // covOpacity: density-overlay opacity, slider-driven when a data overlay is active (#39)
-function applyLayerToggles(){
-  if(!glBase)return;
-  const showRoads=document.getElementById('tgRoads').checked, showLabels=document.getElementById('tgLabels').checked;
-  for(const ly of (glBase.getStyle().layers||[])){
-    const tag=ly.id+'|'+(ly['source-layer']||'');
-    if(ly.type!=='symbol' && /transportation|highway|road|bridge|tunnel|aeroway/i.test(tag))
-      glBase.setLayoutProperty(ly.id,'visibility',showRoads?'visible':'none');     // road geometry
-    else if(ly.type==='symbol')
-      glBase.setLayoutProperty(ly.id,'visibility',showLabels?'visible':'none');     // all text/place/road labels
-  }
-}
+let baseOpacity=1, covOpacity=0.8;   // covOpacity: density-overlay opacity, slider-driven when a data overlay is active (#39)
 function setBase(name){
-  if(baseLayer){map.removeLayer(baseLayer);baseLayer=null;}
-  glBase=null;
-  const b=BASEMAPS[name], tg=document.getElementById('layertoggles');
-  if(b.vector){
-    baseLayer=L.maplibreGL({style:b.style,attribution:ATTR}).addTo(map);
-    glBase=baseLayer.getMaplibreMap();
-    glBase.isStyleLoaded()?applyLayerToggles():glBase.once('load',applyLayerToggles);
-    if(glBase.getCanvas())glBase.getCanvas().style.opacity=baseOpacity;
-    if(tg)tg.style.display='';
-  }else{
-    baseLayer=L.tileLayer(b.url,{...b.opt,attribution:ATTR,opacity:baseOpacity}).addTo(map);
-    if(baseLayer.bringToBack)baseLayer.bringToBack();
-    if(tg)tg.style.display='none';
-  }
+  if(!_mapLoaded){whenMap(()=>setBase(name));return;}
+  if(map.getLayer('basemap'))map.removeLayer('basemap');
+  if(map.getSource('basemap'))map.removeSource('basemap');
+  const b=BASEMAPS[name];
+  map.addSource('basemap',{type:'raster',tiles:b.tiles,tileSize:256,maxzoom:b.maxzoom,attribution:ATTR});
+  map.addLayer({id:'basemap',type:'raster',source:'basemap',paint:{'raster-opacity':baseOpacity}},firstNonBase());
 }
-setBase('Standard');
 
 let markers=[], routeLine=null, destMarker=null, destCell=null, lastFit=null, lastScored=null, planned=false, lastDest=null;
 const VAN=[49.28,-123.12];
@@ -976,14 +987,20 @@ const state={taxon:(FILES["All biodiversity"]?"All biodiversity":Object.keys(FIL
 function debounce(fn,ms){let t;return(...a)=>{clearTimeout(t);t=setTimeout(()=>fn(...a),ms);};}
 const replan=debounce(()=>{if(!planned)return;if(state.planMode==='dest'&&lastDest)setDest(lastDest[0],lastDest[1]);else planTrip();},650);
 
-const startIcon=L.divIcon({className:'',iconSize:[20,20],iconAnchor:[10,10],html:'<div style="width:18px;height:18px;border-radius:50%;background:rgb(139,168,132);border:3px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.45)"></div>'});
-const destIcon=L.divIcon({className:'',iconSize:[26,38],iconAnchor:[13,36],html:'<svg width="26" height="38" viewBox="0 0 26 38"><path d="M13 0C6 0 0 6 0 13c0 9 13 25 13 25s13-16 13-25C26 6 20 0 13 0z" fill="#f0a000" stroke="#fff" stroke-width="2"/><circle cx="13" cy="13" r="5" fill="#fff"/></svg>'});
-const startMarker=L.marker(state.start,{draggable:true,icon:startIcon,zIndexOffset:1000,alt:t('start_alt'),title:t('start_tip')}).addTo(map).bindTooltip(t('start_tip'));
-startMarker.on('drag',()=>{const ll=startMarker.getLatLng();state.start=[ll.lat,ll.lng];});
-startMarker.on('dragend',()=>{const ll=startMarker.getLatLng();setStart(ll.lat,ll.lng);});
-map.on('click',e=>{state.view==='explore'?exploreCell(e.latlng.lat,e.latlng.lng):planTap(e.latlng.lat,e.latlng.lng);});
+// divIcon -> a DOM element MapLibre anchors. Start = 18px dot anchored centre; dest = 26x38 pin anchored at its tip.
+function iconEl(html){const d=document.createElement('div');d.style.lineHeight='0';d.innerHTML=html;return d;}
+const startElHtml='<div style="width:18px;height:18px;border-radius:50%;background:rgb(139,168,132);border:3px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.45)"></div>';
+const destElHtml='<svg width="26" height="38" viewBox="0 0 26 38"><path d="M13 0C6 0 0 6 0 13c0 9 13 25 13 25s13-16 13-25C26 6 20 0 13 0z" fill="#f0a000" stroke="#fff" stroke-width="2"/><circle cx="13" cy="13" r="5" fill="#fff"/></svg>';
+function destMarkerAt(lat,lon){const el=iconEl(destElHtml);el.style.cursor='pointer';return new maplibregl.Marker({element:el,anchor:'bottom'}).setLngLat([lon,lat]);}
+const startEl=iconEl(startElHtml);startEl.title=t('start_tip');startEl.setAttribute('aria-label',t('start_alt'));
+const startMarker=new maplibregl.Marker({element:startEl,draggable:true,anchor:'center'}).setLngLat([state.start[1],state.start[0]]).addTo(map);
+startMarker.on('drag',()=>{const ll=startMarker.getLngLat();state.start=[ll.lat,ll.lng];});
+startMarker.on('dragend',()=>{const ll=startMarker.getLngLat();setStart(ll.lat,ll.lng);});
+// Bare-map click: in MapLibre the cell-layer handler (above) already fired for clicks that hit a cell, so skip those.
+map.on('click',e=>{if(_mapLoaded&&map.getLayer(CELL_LAYER)&&map.queryRenderedFeatures(e.point,{layers:[CELL_LAYER]}).length)return;
+  state.view==='explore'?exploreCell(e.lngLat.lat,e.lngLat.lng):planTap(e.lngLat.lat,e.lngLat.lng);});
 function setStartLabel(s){document.getElementById('startlbl').textContent=s;}
-function setStart(lat,lon,tag){state.start=[lat,lon];startMarker.setLatLng([lat,lon]);state.startSet=true;refreshTapHint();
+function setStart(lat,lon,tag){state.start=[lat,lon];startMarker.setLngLat([lon,lat]);state.startSet=true;refreshTapHint();
   setStartLabel((tag?tag+' · ':'')+lat.toFixed(3)+', '+lon.toFixed(3));
   geocode(lat,lon,tag); if(state.startProsp) showProspects(lat,lon); replan();}
 // In Plan view the first interaction sets the start (your location is less flexible);
@@ -1006,14 +1023,15 @@ function contribStr(r){const c=contribs(r).slice(0,3).map(x=>x.nm.toLowerCase()+
 
 const HALF=0.125;   // half a 0.25-deg cell
 function buildMarkers(){
+  if(!_mapLoaded){whenMap(buildMarkers);return;}
   const rs=rows();
-  // The 0.25° grid geometry is identical across taxa, so after the first build a taxon
-  // switch only swaps each cell's data row + restyles -- no full rectangle teardown/rebuild.
+  // The 0.25° grid geometry is identical across taxa, so after the first build a taxon switch only swaps each
+  // cell's data row + restyles via feature-state -- the 38k-feature source is never reparsed (setData runs once).
   if(markers.length===rs.length){markers.forEach((m,i)=>m.r=rs[i]);recolour();return;}
-  markers.forEach(m=>map.removeLayer(m.mk));markers=[];
-  for(const r of rs){const mk=L.rectangle([[r[0]-HALF,r[1]-HALF],[r[0]+HALF,r[1]+HALF]],{stroke:true,weight:1,fillOpacity:.5});
-    mk.on('click',e=>{if(caOnlyActive()&&US_CELLS&&US_CELLS.has(gekey(r[0],r[1])))return;state.view==='explore'?exploreCell(r[0],r[1]):planTap(r[0],r[1]);});   // r[0],r[1] are invariant across taxa
-    mk.addTo(map);markers.push({mk,r});}
+  const feats=rs.map((r,i)=>({type:'Feature',id:i,properties:{},geometry:{type:'Polygon',coordinates:[[
+    [r[1]-HALF,r[0]-HALF],[r[1]+HALF,r[0]-HALF],[r[1]+HALF,r[0]+HALF],[r[1]-HALF,r[0]+HALF],[r[1]-HALF,r[0]-HALF]]]}}));
+  map.getSource('cells').setData({type:'FeatureCollection',features:feats});
+  markers=rs.map((r,i)=>({r:r,i:i,t:0}));   // r[0],r[1] invariant across taxa; i = stable feature id for setFeatureState
   recolour();
 }
 function renderCellTable(){
@@ -1021,13 +1039,13 @@ function renderCellTable(){
   const top=markers.map(m=>({r:m.r,t:m.t||0})).sort((a,b)=>b.t-a.t).slice(0,40);
   el.innerHTML='<table><caption>'+t('table_caption')+'</caption><thead><tr><th scope="col">'+t('table_rank')+'</th><th scope="col">'+t('table_latlon')+'</th><th scope="col">'+t('table_score')+'</th></tr></thead><tbody>'+
     top.map((o,i)=>`<tr tabindex="0" role="button" data-la="${o.r[0]}" data-lo="${o.r[1]}" aria-label="${t('rank_aria',i+1,o.r[0].toFixed(2),o.r[1].toFixed(2),(o.t*100|0))}"><td>${i+1}</td><td>${o.r[0].toFixed(2)}, ${o.r[1].toFixed(2)}</td><td>${(o.t*100|0)}/100</td></tr>`).join('')+'</tbody></table>';
-  el.querySelectorAll('tr[data-la]').forEach(tr=>{const go=()=>{const la=+tr.dataset.la,lo=+tr.dataset.lo;map.setView([la,lo],9);state.view==='plan'?planTap(la,lo):exploreCell(la,lo);};tr.onclick=go;tr.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}};});
+  el.querySelectorAll('tr[data-la]').forEach(tr=>{const go=()=>{const la=+tr.dataset.la,lo=+tr.dataset.lo;map.jumpTo({center:[lo,la],zoom:8});state.view==='plan'?planTap(la,lo):exploreCell(la,lo);};tr.onclick=go;tr.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}};});
 }
 function recolour(){
   const cov=document.getElementById('tgCoverage')&&document.getElementById('tgCoverage').checked;
   if(geActive()){
     // Categorical layer: colour by most under-represented group (no magnitude). Flat opacity; stroke matches fill so cells tile seamlessly.
-    markers.forEach(m=>{const c=geColour(m);m.mk.setStyle({fillColor:c,color:c,weight:1,opacity:0.62,fillOpacity:0.62});});
+    markers.forEach(m=>{const c=geColour(m);setCellState(m.i,c,0.62);});
     applyCanadaMask();renderCellTable();return;
   }
   // Decouple SCORE from COLOUR. m.t is always the stable NATIONAL percentile -- it drives the
@@ -1048,25 +1066,25 @@ function recolour(){
     // Colour = rank within the current viewport so a Montrealer zoomed in sees local gaps; off-view
     // cells go faint (they recolour on moveend). Hidden US cells excluded so border zooms aren't skewed.
     const inb=viewportCells();
-    const dim=colour(0);markers.forEach(m=>m.mk.setStyle({fillColor:dim,color:dim,weight:1,opacity:.05,fillOpacity:.05}));  // m.t (score) untouched
+    const dim=colour(0);markers.forEach(m=>setCellState(m.i,dim,.05));  // m.t (score) untouched
     fillViewport(inb);
     PREV_INB=new Set(inb);   // baseline for the incremental moveend path: everything else is already dim
   } else {
     PREV_INB=null;
-    // No per-cell tooltip: at tens of thousands of cells binding one each tanks pan/zoom. Stroke
-    // matches fill so adjacent canvas rectangles tile seamlessly (else anti-alias gaps stripe at low zoom).
-    markers.forEach(m=>{const ct=m.t,o=cov?0:0.25+0.5*ct,c=colour(ct);m.mk.setStyle({fillColor:c,color:c,weight:1,opacity:o,fillOpacity:o});});
+    // Whole-grid paint: one feature-state write per cell (fc+op). fill-outline matches the fill so the 38k
+    // cells tile seamlessly; no per-cell tooltip/handler (the single layer-level click handler covers all).
+    markers.forEach(m=>{const ct=m.t,o=cov?0:0.25+0.5*ct,c=colour(ct);setCellState(m.i,c,o);});
   }
   applyCanadaMask();renderCellTable();
 }
 // Cells currently in view (US-side excluded when "Canada only" is on, so border zooms aren't skewed).
-function viewportCells(){const b=map.getBounds();let inb=markers.filter(m=>b.contains([m.r[0],m.r[1]]));
+function viewportCells(){const b=map.getBounds();let inb=markers.filter(m=>b.contains([m.r[1],m.r[0]]));
   if(caOnlyActive()&&US_CELLS)inb=inb.filter(m=>!US_CELLS.has(gekey(m.r[0],m.r[1])));return inb;}
 // Colour the in-bounds cells by their rank WITHIN the viewport (same formula as the full path). m.t untouched.
 function fillViewport(inb){const vv=inb.map(m=>impact(m.r));
   const od=vv.map((v,i)=>[v,i]).sort((a,b)=>a[0]-b[0]);const rk=new Array(vv.length);od.forEach((p,k)=>rk[p[1]]=k);const m1=Math.max(vv.length-1,1);
   const fl=od.length>0&&(od[od.length-1][0]-od[0][0])<1e-9;
-  inb.forEach((m,i)=>{const ct=fl?0:rk[i]/m1,o=.25+.5*ct,c=colour(ct);m.mk.setStyle({fillColor:c,color:c,weight:1,opacity:o,fillOpacity:o});});}
+  inb.forEach((m,i)=>{const ct=fl?0:rk[i]/m1,o=.25+.5*ct,c=colour(ct);setCellState(m.i,c,o);});}
 // In-bounds set from the last viewport-relative paint, so moveend only touches what changed (null = full repaint needed first).
 let PREV_INB=null;
 // Incremental moveend repaint: re-rank/re-colour only the in-view cells, dim only the cells that LEFT the
@@ -1075,7 +1093,7 @@ function recolourViewport(){
   if(PREV_INB===null){recolour();return;}   // no baseline yet (e.g. first paint, or a non-rel path ran): do the full establish
   const inb=viewportCells(),now=new Set(inb);
   const dim=colour(0);
-  PREV_INB.forEach(m=>{if(!now.has(m))m.mk.setStyle({fillColor:dim,color:dim,weight:1,opacity:.05,fillOpacity:.05});});  // cells that left view
+  PREV_INB.forEach(m=>{if(!now.has(m))setCellState(m.i,dim,.05);});  // cells that left view
   fillViewport(inb);
   PREV_INB=now;
   applyCanadaMask();   // US cells that scrolled into view stay hidden; far cheaper than a full re-rank
@@ -1150,7 +1168,7 @@ if(critSel)critSel.onchange=()=>{const v=critSel.value, ge=document.getElementBy
     applyChallenge(PRESETS[+v]);
   }};
 applyChallenge(PRESETS[0]);
-(function(){var b=document.getElementById('protobar'),x=document.getElementById('protox');if(!b)return;var off=function(){b.style.display='none';document.documentElement.style.setProperty('--bh','0px');if(window.map)setTimeout(function(){map.invalidateSize();},60);};try{if(localStorage.getItem('wtb_proto')==='hid')off();}catch(e){}if(x)x.onclick=function(){off();try{localStorage.setItem('wtb_proto','hid');}catch(e){}};})();
+(function(){var b=document.getElementById('protobar'),x=document.getElementById('protox');if(!b)return;var off=function(){b.style.display='none';document.documentElement.style.setProperty('--bh','0px');if(window.map)setTimeout(function(){map.resize();},60);};try{if(localStorage.getItem('wtb_proto')==='hid')off();}catch(e){}if(x)x.onclick=function(){off();try{localStorage.setItem('wtb_proto','hid');}catch(e){}};})();
 
 const bmSel=document.getElementById('basemap');
 // Issue #20: map style is one of four choices; the iNaturalist sampling-density overlay folds in as the 4th.
@@ -1160,50 +1178,47 @@ rebuildStyles();
 bmSel.onchange=()=>{const v=bmSel.value, cov=document.getElementById('tgCoverage');
   if(v==='__inat__'){setBase('Light');if(cov&&!cov.checked){cov.checked=true;cov.dispatchEvent(new Event('change'));}}
   else{setBase(v);if(cov&&cov.checked){cov.checked=false;cov.dispatchEvent(new Event('change'));}}};
-let covLayer=null;
+let covActive=false;
 // dec25 100 m density is served as local raster PMTiles (issue #10): the magma colormap
 // (rescale 0,10) is baked into transparent WEBP tiles so the overlay sharpens as you zoom
 // to ~300 m, where the 1 km COG via TiTiler stayed coarse. Fungi has no dec25 layer ->
 // keep its older 1 km COG on the remote tiler until one lands.
 const COVPM=['All','Amphibia','Aves','Insecta','Mammalia','Plantae','Reptilia','Actinopterygii','Arachnida','Mollusca'];   // taxa with a local PMTiles (others -> All)
-// Raster-PMTiles Leaflet layer: tiles are addressed in the 256-scheme but stored as 512 px
-// WEBP, decoded to a canvas tile (alpha already baked in). Over-zooms past native z9.
-const PMRaster=L.GridLayer.extend({
-  initialize:function(url,opts){L.GridLayer.prototype.initialize.call(this,opts);this._pm=new pmtiles.PMTiles(new pmtiles.FetchSource(url));},
-  createTile:function(coords,done){
-    const tile=document.createElement('canvas');tile.width=tile.height=256;const ctx=tile.getContext('2d');
-    this._pm.getZxy(coords.z,coords.x,coords.y).then(r=>{
-      if(!r){done(null,tile);return;}
-      return createImageBitmap(new Blob([r.data],{type:'image/webp'})).then(bmp=>{ctx.drawImage(bmp,0,0,256,256);done(null,tile);});
-    }).catch(e=>done(e,tile));
-    return tile;
-  }
-});
+// Raster PMTiles now ride the native MapLibre pmtiles:// protocol (registered once) instead of a custom
+// GridLayer that hand-decoded WEBP to canvas. The protocol reads each archive's TileJSON (native z9) and
+// MapLibre overzooms past it; the magma alpha is baked in, so it composites straight over the basemap.
+let _pmReg=false;
+function ensurePM(){if(_pmReg)return;_pmReg=true;maplibregl.addProtocol('pmtiles',new pmtiles.Protocol().tile);}
+function removeCov(){if(map.getLayer('cov'))map.removeLayer('cov');if(map.getSource('cov'))map.removeSource('cov');covActive=false;}
 function setCoverage(){
-  if(covLayer){map.removeLayer(covLayer);covLayer=null;}
+  if(!_mapLoaded){whenMap(setCoverage);return;}
+  removeCov();
   if(!document.getElementById('tgCoverage').checked){updateOpacityControl();return;}
   const ct=COVPM.includes(state.taxon)?state.taxon:'All';
   const attr='iNaturalist density &copy; Biodiversit\u00e9 Qu\u00e9bec';
   if(state.taxon==='Fungi'){   // no dec25 layer -> remote 1 km COG
-    covLayer=L.tileLayer('https://tiler.biodiversite-quebec.ca/cog/tiles/{z}/{x}/{y}?url='+encodeURIComponent('https://object-arbutus.cloud.computecanada.ca/bq-io/io/inat_canada_heatmaps/Fungi_density_inat_1km.tif')+'&rescale=0,10&colormap_name=magma&resampling=cubic',
-      {opacity:covOpacity,maxZoom:14,zIndex:250,attribution:attr}).addTo(map);
+    map.addSource('cov',{type:'raster',tiles:['https://tiler.biodiversite-quebec.ca/cog/tiles/{z}/{x}/{y}?url='+encodeURIComponent('https://object-arbutus.cloud.computecanada.ca/bq-io/io/inat_canada_heatmaps/Fungi_density_inat_1km.tif')+'&rescale=0,10&colormap_name=magma&resampling=cubic'],tileSize:256,maxzoom:14,attribution:attr});
   }else{
-    covLayer=new PMRaster('density/'+ct+'.pmtiles',
-      {opacity:covOpacity,tileSize:256,maxNativeZoom:9,maxZoom:14,zIndex:250,attribution:attr}).addTo(map);
+    ensurePM();
+    map.addSource('cov',{type:'raster',url:'pmtiles://density/'+ct+'.pmtiles',tileSize:256,attribution:attr});
   }
+  map.addLayer({id:'cov',type:'raster',source:'cov',paint:{'raster-opacity':covOpacity}},map.getLayer(CELL_LAYER)?CELL_LAYER:undefined);
+  covActive=true;
   updateOpacityControl();
 }
 // #39: the opacity slider drives the data overlay when one is active (so it fades the magma to
 // reveal road/water/place context), else it falls back to basemap brightness. Switches label,
 // aria-label, slider value + % readout to match the active target.
-function dataOverlayActive(){return !!covLayer;}
+function dataOverlayActive(){return covActive;}
+function setBaseOpacity(v){baseOpacity=v;if(_mapLoaded&&map.getLayer('basemap'))map.setPaintProperty('basemap','raster-opacity',v);}
+function setCovOpacity(v){covOpacity=v;if(_mapLoaded&&map.getLayer('cov'))map.setPaintProperty('cov','raster-opacity',v);}
 function updateOpacityControl(){
   const sl=document.getElementById('baseop'),lab=document.getElementById('bople'),val=document.getElementById('bopv');
   if(!sl||!lab||!val)return;
   const ov=dataOverlayActive();
   const row=document.getElementById('opacityRow');
   if(row)row.style.display=ov?'':'none';   // #46(b): the slider only appears with a data overlay; lock basemap brightness at 100% otherwise
-  if(!ov){baseOpacity=1;if(baseLayer&&baseLayer.setOpacity)baseLayer.setOpacity(1);else if(glBase&&glBase.getCanvas())glBase.getCanvas().style.opacity=1;}
+  if(!ov)setBaseOpacity(1);
   const v=ov?covOpacity:baseOpacity;
   sl.value=v;
   lab.textContent=t(ov?'data_opacity':'map_brightness');
@@ -1229,12 +1244,11 @@ map.on('moveend',()=>{if(zoomScaleActive()&&!geActive())recolourViewport();});
 (function(){const tog=document.getElementById('panelToggle');if(!tog)return;
   const setAria=c=>{const lab=t(c?'show_panel':'hide_panel');tog.setAttribute('aria-label',lab);tog.title=lab;tog.textContent=c?'›':'‹';};
   setAria(false);
-  tog.addEventListener('click',()=>{const c=document.body.classList.toggle('panel-collapsed');setAria(c);setTimeout(()=>{try{map.invalidateSize();}catch(e){}},220);});})();
+  tog.addEventListener('click',()=>{const c=document.body.classList.toggle('panel-collapsed');setAria(c);setTimeout(()=>{try{map.resize();}catch(e){}},220);});})();
 document.getElementById('baseop').addEventListener('input',e=>{const v=parseFloat(e.target.value);
-  if(dataOverlayActive()){covOpacity=v;if(covLayer&&covLayer.setOpacity)covLayer.setOpacity(covOpacity);}   // #39: fade the magma data
-  else{baseOpacity=v;if(baseLayer&&baseLayer.setOpacity)baseLayer.setOpacity(baseOpacity);else if(glBase&&glBase.getCanvas())glBase.getCanvas().style.opacity=baseOpacity;}
+  if(dataOverlayActive())setCovOpacity(v);   // #39: fade the magma data
+  else setBaseOpacity(v);
   document.getElementById('bopv').textContent=Math.round(v*100)+'%';});
-['tgRoads','tgLabels'].forEach(id=>document.getElementById(id).addEventListener('change',applyLayerToggles));
 document.getElementById('maxleg').addEventListener('change',e=>{state.maxLeg=parseFloat(e.target.value);replan();});
 document.getElementById('minratio').addEventListener('change',e=>{state.minRatio=parseFloat(e.target.value);replan();});
 
@@ -1281,7 +1295,7 @@ const doSearch=debounce(async q=>{
     srEl.replaceChildren(...r.map(p=>{const parts=p.display_name.split(', '),head=parts[0],sub=parts.slice(1,4).join(', ');
       const d=document.createElement('div');d.className='res';d.setAttribute('role','option');d.dataset.lat=p.lat;d.dataset.lon=p.lon;
       const b=document.createElement('b');b.textContent=head;const sb=document.createElement('div');sb.className='sub';sb.textContent=sub;d.append(b,sb);
-      d.onclick=()=>{map.setView([+p.lat,+p.lon],10);setStart(+p.lat,+p.lon,head);psEl.value=head;closeResults();};
+      d.onclick=()=>{map.jumpTo({center:[+p.lon,+p.lat],zoom:9});setStart(+p.lat,+p.lon,head);psEl.value=head;closeResults();};
       return d;}));
     psEl.setAttribute('aria-expanded','true');srEl.classList.add('open');
   }catch(e){closeResults();}
@@ -1291,7 +1305,7 @@ psEl.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();const
 document.addEventListener('click',e=>{if(!srEl.contains(e.target)&&e.target!==psEl)closeResults();});
 function locateMe(){setStartLabel(t('locating'));
   let done=false;
-  const ok=(lat,lon,how)=>{if(done)return;done=true;map.setView([lat,lon],8);setStart(lat,lon,how);};   // idempotent: GPS resolving after the IP fallback fired can't double-set
+  const ok=(lat,lon,how)=>{if(done)return;done=true;map.jumpTo({center:[lon,lat],zoom:7});setStart(lat,lon,how);};   // idempotent: GPS resolving after the IP fallback fired can't double-set
   const fail=()=>{if(!done)setStartLabel(t('loc_unavail'));};                                            // never clobber a successful locate
   if(navigator.geolocation){navigator.geolocation.getCurrentPosition(p=>ok(p.coords.latitude,p.coords.longitude,t('my_loc_short')),()=>{if(!done)ipLoc(ok,fail);},{timeout:6000});setTimeout(()=>{if(!done)ipLoc(ok,fail);},6500);}else ipLoc(ok,fail);}
 document.getElementById('setMe').onclick=locateMe;
@@ -1385,40 +1399,55 @@ function rankAndRender(){
     selectTrip(here);
   }
 }
-function clearRoute(){[routeLine,destMarker,destCell].forEach(l=>{if(l)map.removeLayer(l);});routeLine=destMarker=destCell=null;}
+// Trip-planner overlays as MapLibre sources/layers (were Leaflet rectangle/polyline/featureGroup vectors).
+// destCell = the dashed green target square; route = the white-cased green line(s). DOM markers ride on top.
+let routeIds=[];
+function setDestCell(lat,lon){if(!_mapLoaded)return;removeDestCell();const H=0.125;
+  map.addSource('destcell',{type:'geojson',data:{type:'Feature',geometry:{type:'Polygon',coordinates:[[[lon-H,lat-H],[lon+H,lat-H],[lon+H,lat+H],[lon-H,lat+H],[lon-H,lat-H]]]}}});
+  map.addLayer({id:'destcell-fill',type:'fill',source:'destcell',paint:{'fill-color':'#74c476','fill-opacity':0.16}});
+  map.addLayer({id:'destcell-line',type:'line',source:'destcell',paint:{'line-color':'#1b7837','line-width':2,'line-dasharray':[2.5,2.5]}});
+  destCell=true;}
+function removeDestCell(){if(_mapLoaded){['destcell-fill','destcell-line'].forEach(id=>{if(map.getLayer(id))map.removeLayer(id);});if(map.getSource('destcell'))map.removeSource('destcell');}destCell=null;}
+function addRoute(coords,paint){if(!_mapLoaded)return;const id='rt'+routeIds.length;
+  map.addSource(id,{type:'geojson',data:{type:'Feature',geometry:{type:'LineString',coordinates:coords.map(c=>[c[1],c[0]])}}});
+  const p={'line-color':paint.color,'line-width':paint.weight,'line-opacity':paint.opacity};if(paint.dash)p['line-dasharray']=paint.dash;
+  map.addLayer({id:id,type:'line',source:id,layout:{'line-cap':'round','line-join':'round'},paint:p});routeIds.push(id);routeLine=true;}
+function clearRouteLines(){if(_mapLoaded)routeIds.forEach(id=>{if(map.getLayer(id))map.removeLayer(id);if(map.getSource(id))map.removeSource(id);});routeIds=[];routeLine=null;}
+function clearRoute(){clearRouteLines();removeDestCell();const dm=destMarker;destMarker=null;destCell=null;routeLine=null;if(dm)dm.remove();}
 // Issue #16: deselect a cell and return to the "nothing selected" home state without editing the URL.
 let _reselect=false;   // true only while exploreCell swaps one selection for another (suppress the close-driven clear)
 function clearSelection(){clearRoute();
   const pr=document.getElementById('prospects');if(pr){pr.dataset.idle='1';pr.innerHTML='<div class="hd" style="margin-top:10px" data-i18n="prospects_idle">'+t('prospects_idle')+'</div>';}
   _lastProspect=null;   // the cell popup (which held the coverage tree + species) is gone; nothing for setLang to re-render
   try{history.replaceState(null,'',location.pathname);}catch(e){}}
+function openDestPopup(lat,lon,html){const p=wirePopup(new maplibregl.Popup({offset:30,maxWidth:'340px'}).setHTML(html));
+  destMarker=destMarkerAt(lat,lon).addTo(map);destMarker.setPopup(p);destMarker.togglePopup();}
 function selectTrip(o){clearRoute();const dest=[o.m.r[0],o.m.r[1]];
-  destCell=L.rectangle([[dest[0]-0.125,dest[1]-0.125],[dest[0]+0.125,dest[1]+0.125]],{color:'#1b7837',weight:2,dashArray:'5 5',fillColor:'#74c476',fillOpacity:0.16,interactive:false}).addTo(map);
+  setDestCell(dest[0],dest[1]);
   if(o.here){
-    map.fitBounds(destCell.getBounds(),{padding:[90,90],maxZoom:11});
-    destMarker=L.marker(dest,{icon:destIcon,zIndexOffset:900}).addTo(map)
-      .bindPopup(`<b>${t('pop_here_title')}</b><br><span style="color:#667">${t('pop_here_sub')}</span><br>${t('pop_impact')} <b>${(o.m.t*100|0)}/100</b> · ${contribStr(o.m.r)}<br>${t('pop_here_foot')}`).openPopup();
+    map.fitBounds([[dest[1]-0.125,dest[0]-0.125],[dest[1]+0.125,dest[0]+0.125]],{padding:90,maxZoom:10});
+    openDestPopup(dest[0],dest[1],`<b>${t('pop_here_title')}</b><br><span style="color:#667">${t('pop_here_sub')}</span><br>${t('pop_impact')} <b>${(o.m.t*100|0)}/100</b> · ${contribStr(o.m.r)}<br>${t('pop_here_foot')}`);
     document.querySelectorAll('#trips .row').forEach(el=>el.classList.toggle('sel',el.dataset.id===o.id));
     fetchProspects(dest[0],dest[1],'right_here');return;
   }
-  const layers=[];
+  let pts=[state.start,dest];
   if(o.geo){
     // OSRM snaps the route ends to the nearest road, so its geometry starts/ends
     // a little off the actual start pin and cell centre. Draw the routed road solid,
     // and bridge the off-road hops (pin->road, road->cell) with a faint dashed link
     // so the line always visibly connects to where you are and where you're going.
     const cs=o.geo.coordinates.map(c=>[c[1],c[0]]);
-    layers.push(L.polyline(cs,{color:'#ffffff',weight:9,opacity:.95}),
-                L.polyline(cs,{color:'rgb(139,168,132)',weight:4.5,opacity:1}),
-                L.polyline([state.start,cs[0]],{color:'rgb(139,168,132)',weight:2.5,dashArray:'2 6',opacity:.8}),
-                L.polyline([cs[cs.length-1],dest],{color:'rgb(139,168,132)',weight:2.5,dashArray:'2 6',opacity:.8}));
+    addRoute(cs,{color:'#ffffff',weight:9,opacity:.95});
+    addRoute(cs,{color:'rgb(139,168,132)',weight:4.5,opacity:1});
+    addRoute([state.start,cs[0]],{color:'rgb(139,168,132)',weight:2.5,dash:[0.8,2.4],opacity:.8});
+    addRoute([cs[cs.length-1],dest],{color:'rgb(139,168,132)',weight:2.5,dash:[0.8,2.4],opacity:.8});
+    pts=[state.start,...cs,dest];
   } else {
-    layers.push(L.polyline([state.start,dest],{color:'#ffffff',weight:8,opacity:.95}),
-                L.polyline([state.start,dest],{color:'rgb(139,168,132)',weight:4,dashArray:'7 7',opacity:1}));
+    addRoute([state.start,dest],{color:'#ffffff',weight:8,opacity:.95});
+    addRoute([state.start,dest],{color:'rgb(139,168,132)',weight:4,dash:[1.75,1.75],opacity:1});
   }
-  routeLine=L.featureGroup(layers).addTo(map);map.fitBounds(routeLine.getBounds(),{padding:[60,60],maxZoom:10});
-  destMarker=L.marker(dest,{icon:destIcon,zIndexOffset:900}).addTo(map)
-    .bindPopup(`<b>${t('pop_go_title')}</b> <span style="color:#667">${t('pop_go_sub')}</span><br><span style="color:#667">${t('pop_centre')} ${dest[0].toFixed(2)}, ${dest[1].toFixed(2)}</span><br>${t('pop_impact')} <b>${(o.m.t*100|0)}/100</b> · ${contribStr(o.m.r)}<br>${o.fieldH>=MIN_FIELD_H?`${MODES[state.mode].icon} ${fmth(o.oneH)} ${t('each_way')} · ${fmth(o.fieldH)} ${t('in_field')}`:`${MODES[state.mode].icon} ${fmth(o.oneH)} ${t('each_way')} · ${fmth(2*o.oneH)} ${t('pop_over_budget',budvEl.textContent)}`}<br>${co2lbl(o.co2)} ${t('pop_round')}${o.real?'':' '+t('pop_estimated')}`).openPopup();
+  map.fitBounds(lngLatBounds(pts),{padding:60,maxZoom:9});
+  openDestPopup(dest[0],dest[1],`<b>${t('pop_go_title')}</b> <span style="color:#667">${t('pop_go_sub')}</span><br><span style="color:#667">${t('pop_centre')} ${dest[0].toFixed(2)}, ${dest[1].toFixed(2)}</span><br>${t('pop_impact')} <b>${(o.m.t*100|0)}/100</b> · ${contribStr(o.m.r)}<br>${o.fieldH>=MIN_FIELD_H?`${MODES[state.mode].icon} ${fmth(o.oneH)} ${t('each_way')} · ${fmth(o.fieldH)} ${t('in_field')}`:`${MODES[state.mode].icon} ${fmth(o.oneH)} ${t('each_way')} · ${fmth(2*o.oneH)} ${t('pop_over_budget',budvEl.textContent)}`}<br>${co2lbl(o.co2)} ${t('pop_round')}${o.real?'':' '+t('pop_estimated')}`);
   document.querySelectorAll('#trips .row').forEach(el=>el.classList.toggle('sel',el.dataset.id===o.id));
   fetchProspects(o.m.r[0],o.m.r[1],'destination');
 }
@@ -1480,23 +1509,20 @@ function exploreCell(lat,lon){
   _reselect=true;   // swapping selections: suppress the close-driven deselect until the new popup is open (issue #16)
   const o=best,dest=[o.r[0],o.r[1]];clearRoute();
   try{history.replaceState(null,'','?at='+dest[0].toFixed(3)+','+dest[1].toFixed(3)+'&g='+encodeURIComponent(state.taxon));}catch(e){}
-  destCell=L.rectangle([[dest[0]-0.125,dest[1]-0.125],[dest[0]+0.125,dest[1]+0.125]],{color:'#1b7837',weight:2,dashArray:'5 5',fillColor:'#74c476',fillOpacity:0.16,interactive:false}).addTo(map);
-  // Issue #44/#56: the popup holds the per-cell coverage tree and the rarest species, filled async. Pass
-  // the content as a PERSISTENT element (not an HTML string) and keep refs to the two child containers:
-  // Leaflet re-appends an element on each update() (autoPan/setView churn) but rebuilds a string from
-  // scratch, which detached the captured nodes mid-fetch and left the popup stuck on loading. Centre the
-  // cell first (animate:false so it doesn't race autoPan), then openPopup autoPans with top padding.
+  setDestCell(dest[0],dest[1]);
+  // Issue #44/#56: the popup holds the per-cell coverage tree and the rarest species, filled async. setDOMContent
+  // keeps the same persistent element (the two child containers stay attached) so an in-flight fetch can fill it.
   const popDiv=document.createElement('div');
   const popGaps=document.createElement('div'); popGaps.id='popgaps'; popGaps.innerHTML='<div class="popsec">'+t('gaptree_lookup')+'</div>';
   const popSp=document.createElement('div'); popSp.id='popsp'; popSp.innerHTML='<div class="popsec">'+t('prospects_lookup')+'</div>';
   popDiv.appendChild(popGaps); popDiv.appendChild(popSp);
-  destMarker=L.marker(dest,{icon:destIcon,zIndexOffset:900}).addTo(map)
-    .bindPopup(popDiv,{maxWidth:320,minWidth:288,autoPanPaddingTopLeft:[18,96],autoPanPaddingBottomRight:[18,40]});
-  // #70: place the tapped cell low (≈1/6 of the map height below it) so the upward-opening popup
-  // clears the top chrome on laptops — true-centering hid the popup's top.
-  const _z=map.getZoom(),_dp=map.project(dest,_z),_mh=map.getSize().y;
-  map.setView(map.unproject(L.point(_dp.x,_dp.y-_mh/3),_z),_z,{animate:false});
-  destMarker.openPopup();
+  const pop=wirePopup(new maplibregl.Popup({offset:30,maxWidth:'320px'}).setDOMContent(popDiv));
+  destMarker=destMarkerAt(dest[0],dest[1]).addTo(map);destMarker.setPopup(pop);
+  // #70: place the tapped cell low (≈1/3 of the map height below centre) so the upward-opening popup
+  // clears the top chrome on laptops — true-centering hid the popup's top. MapLibre popups don't auto-pan.
+  const _z=map.getZoom(),_dp=map.project([dest[1],dest[0]]),_mh=map.getContainer().clientHeight;
+  map.jumpTo({center:map.unproject([_dp.x,_dp.y-_mh/3]),zoom:_z});
+  destMarker.togglePopup();
   _reselect=false;
   fetchProspects(dest[0],dest[1],'destination',{toPopup:true,spEl:popSp,gapsEl:popGaps});
 }
@@ -1510,7 +1536,7 @@ function setView(v){
   if(v!=='plan')clearRoute();
   // #40: the side panel isn't shown over Compare goals, so hide its collapse toggle there; restore it for Explore/Plan.
   const ptog=document.getElementById('panelToggle');if(ptog)ptog.style.display=v==='compare'?'none':'';
-  if(v==='compare')renderInsights(); else map.invalidateSize();
+  if(v==='compare')renderInsights(); else map.resize();
 }
 document.getElementById('vexplore').onclick=()=>setView('explore');
 document.getElementById('vplan').onclick=()=>setView('plan');
@@ -1527,7 +1553,7 @@ applyI18N();   // paint static chrome + set <html lang> for the seeded language
 
 function bootSeq(){return loadGroup(state.taxon).then(()=>{buildMarkers();setView('explore');showLoading(false);
   try{const u=new URLSearchParams(location.search),at=u.get('at'),g=u.get('g');
-    const go=()=>{if(at){const p=at.split(',').map(Number);if(p.length===2&&isFinite(p[0])&&isFinite(p[1])&&p[0]>=BB.minlat&&p[0]<=BB.maxlat&&p[1]>=BB.minlon&&p[1]<=BB.maxlon){map.setView([p[0],p[1]],8);exploreCell(p[0],p[1]);}}};
+    const go=()=>{if(at){const p=at.split(',').map(Number);if(p.length===2&&isFinite(p[0])&&isFinite(p[1])&&p[0]>=BB.minlat&&p[0]<=BB.maxlat&&p[1]>=BB.minlon&&p[1]<=BB.maxlon){map.jumpTo({center:[p[1],p[0]],zoom:7});exploreCell(p[0],p[1]);}}};
     if(g&&FILES[g]&&g!==state.taxon){state.taxon=g;taxonSel.value=g;loadGroup(g).then(()=>{buildMarkers();go();}).catch(()=>{});}else{go();}
     if(!at)locateMe();   // default Explore to the user's location (no shared cell to restore)
   }catch(e){}}).catch(()=>{const el=document.getElementById('loading');if(el){el.style.display='block';el.innerHTML=t('load_error')+' <a href="#" onclick="bootRetry();return false;" style="color:#7fd1ff">'+t('retry')+'</a>';}});}
