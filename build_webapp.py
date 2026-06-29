@@ -232,7 +232,7 @@ details.adv>summary:hover{color:var(--ink)}
 #maplegend .ramp{height:9px;border-radius:5px;background:linear-gradient(90deg,#ffffd9,#c7e9b4,#41b6c4,#225ea8,#081d58);margin:3px 0 2px}
 #maplegend .ramp.magma{background:linear-gradient(90deg,#000004,#51127c,#b73779,#fc8961,#fcfdbf)}/* matches the iNaturalist density overlay colormap */
 #maplegend .lab{display:flex;justify-content:space-between;font-size:12.5px;color:#46566a}
-#maplegend .hint{margin-top:3px;color:#46566a;font-size:12.5px}
+#maplegend .hint{margin-top:3px;color:#46566a;font-size:10.5px}/* #82: two sizes under the .lab labels (12.5px) */
 @media(max-width:640px){#maplegend{left:auto;right:8px;bottom:auto;top:calc(50vh + 8px);min-width:0;max-width:158px;padding:6px 8px}}
 #loading{position:fixed;left:50%;top:46%;transform:translate(-50%,-50%);z-index:1200;background:rgba(255,255,255,.96);border-radius:10px;padding:11px 17px;box-shadow:0 3px 14px rgba(0,0,0,.25);font-size:14px;font-weight:600;color:#1b2a3a}
 @media(max-width:640px){#loading{left:50%;top:74vh}}
@@ -246,6 +246,8 @@ details.adv>summary:hover{color:var(--ink)}
 #howclose{position:absolute;top:6px;right:8px;background:transparent;border:0;color:var(--mut);font-size:20px;line-height:1;cursor:pointer;padding:2px 6px}
 #howclose:hover{color:var(--ink)}
 @media(max-width:640px){#topctrls{right:8px}#howbtn{max-width:none;font-size:12px}#howpanel{left:8px;right:8px;width:auto;top:calc(50vh + 44px);max-height:44vh}}
+/* #84: French strings run longer — widen these two elements (desktop only; the mobile rules above already size them) so the How-scored label, legend labels and notice don't wrap to extra lines. */
+@media(min-width:641px){html[lang=fr] #howbtn{max-width:none}html[lang=fr] #maplegend{max-width:320px}}
 </style></head>
 <body><div id="app">
 <div id="panel" role="main"><div id="panelInner">
@@ -342,7 +344,7 @@ details.adv>summary:hover{color:var(--ink)}
 <div id="viewtoggle" role="navigation" data-i18n-aria="aria_map_view" aria-label="Map view"><button id="vexplore" class="on" aria-pressed="true" data-i18n="view_explore">Explore</button><button id="vplan" aria-pressed="false" data-i18n="view_plan">Plan a trip</button><button id="vcompare" aria-pressed="false" data-i18n="view_compare">Compare goals</button></div>
 <div id="loading" role="status" aria-live="polite" data-i18n="loading">Loading the map…</div>
 <div id="maplegend" role="region" data-i18n-aria="aria_map_legend" aria-label="Map legend"><div class="ramp"></div><div class="lab"><span data-i18n="legend_low">well-sampled</span><span data-i18n="legend_high">biggest gaps</span></div><div class="hint" id="legendrel" style="display:none;color:#7a5b00" data-i18n="legend_rel">Colours rescaled to this view — not comparable across zoom levels.</div></div>
-<div id="topctrls"><button id="langbtn" type="button" data-i18n-aria="aria_language" data-i18n-title="lang_switch" aria-label="Language" title="Switch language">EN</button><button id="howbtn" type="button" aria-expanded="false" aria-controls="howpanel" data-i18n-title="how_scored" title="How impact is scored & data sources"><span data-i18n="how_scored">How impact is scored & data sources</span></button></div>
+<div id="topctrls"><button id="langbtn" type="button" data-i18n-aria="aria_language" data-i18n-title="lang_switch" aria-label="Language" title="Switch language">FR</button><button id="howbtn" type="button" aria-expanded="false" aria-controls="howpanel" data-i18n-title="how_scored" title="How impact is scored & data sources"><span data-i18n="how_scored">How impact is scored & data sources</span></button></div>
 <div id="howpanel" role="region" data-i18n-aria="how_scored" aria-label="How impact is scored & data sources">
   <button id="howclose" type="button" data-i18n-aria="aria_close" data-i18n-title="aria_close" aria-label="Close" title="Close">×</button>
   <div class="legend" style="margin-top:2px"><span data-i18n="skip">skip</span><div class="bar"></div><span data-i18n="go_here">go here</span></div>
@@ -680,7 +682,7 @@ function applyI18N(){
   document.querySelectorAll('[data-i18n-ph]').forEach(el=>{const v=t(el.getAttribute('data-i18n-ph'));if(v!=null)el.placeholder=v;});
   document.querySelectorAll('[data-i18n-title]').forEach(el=>{const v=t(el.getAttribute('data-i18n-title'));if(v!=null)el.title=v;});
   document.querySelectorAll('[data-i18n-aria]').forEach(el=>{const v=t(el.getAttribute('data-i18n-aria'));if(v!=null)el.setAttribute('aria-label',v);});
-  const lb=document.getElementById('langbtn');if(lb)lb.textContent=LANG.toUpperCase();   // #69: single toggle shows the active language
+  const lb=document.getElementById('langbtn');if(lb)lb.textContent=(LANG==='en'?'FR':'EN');   // #81: button shows the language you switch TO, not the active one
 }
 function relabelDynamic(){
   // re-render the JS-built widgets whose static strings come from the dict
